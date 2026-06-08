@@ -62,10 +62,11 @@ async function fetchAccount(account, db) {
   const { platform, accountId, name } = account;
 
   if (platform === 'bilibili') {
-    // 主接口：relation/stat
+    // 主接口：relation/stat（使用移动端 UA 避免 412 风控）
+    const mobileUA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
     try {
       const res = await fetch(`https://api.bilibili.com/x/relation/stat?vmid=${accountId}`, {
-        headers: { 'User-Agent': UA, 'Referer': 'https://www.bilibili.com/' }
+        headers: { 'User-Agent': mobileUA, 'Referer': 'https://m.bilibili.com/' }
       });
       if (res.ok) {
         const json = await res.json();
@@ -93,9 +94,10 @@ async function fetchAccount(account, db) {
 
 // B站备用接口：通过空间页面获取粉丝数
 async function fetchBilibiliFallback(accountId, name, platform, db) {
+  const mobileUA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
   try {
     const res = await fetch(`https://api.bilibili.com/x/space/acc/info?mid=${accountId}`, {
-      headers: { 'User-Agent': UA, 'Referer': 'https://www.bilibili.com/' }
+      headers: { 'User-Agent': mobileUA, 'Referer': 'https://m.bilibili.com/' }
     });
     if (!res.ok) return { error: 'fallback HTTP ' + res.status };
     const json = await res.json();
@@ -105,9 +107,8 @@ async function fetchBilibiliFallback(accountId, name, platform, db) {
     // 再调用 relation/stat 确认
     const statRes = await fetch(`https://api.bilibili.com/x/relation/stat?vmid=${accountId}`, {
       headers: {
-        'User-Agent': UA,
-        'Referer': 'https://space.bilibili.com/' + accountId + '/',
-        'Origin': 'https://space.bilibili.com'
+        'User-Agent': mobileUA,
+        'Referer': 'https://m.bilibili.com/'
       }
     });
     if (!statRes.ok) return { error: 'stat fallback HTTP ' + statRes.status };
