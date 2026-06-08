@@ -17,7 +17,7 @@ export async function onRequestPost(context) {
     const salt = await env.KV.get('config:auth_salt');
 
     if (!storedHash || !salt) {
-      return jsonResponse({ error: '系统未初始化，请先设置密码' }, 500);
+      return jsonResponse({ error: '系统未初始化。请先在 Cloudflare Dashboard → Workers KV → CONFIG 命名空间中添加 config:auth_salt 和 config:password 键值对。详见 README.md 第七步。' }, 500);
     }
 
     // 比对：客户端发来的是 SHA-256(password)，服务端比对 SHA-256(received + salt)
