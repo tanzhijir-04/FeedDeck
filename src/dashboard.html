@@ -7,23 +7,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="css/base.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js"></script>
 <style>
 /* ===== GRID ===== */
 .grid {
   width: 100vw;
   height: 100vh;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
   gap: var(--gap);
   padding: var(--gap);
-}
-
-@media (orientation: landscape) {
-  .grid {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
 }
 
 /* ===== HOT SEARCH ===== */
@@ -326,7 +318,7 @@
 <div class="grid">
 
   <!-- 热搜榜单 -->
-  <div class="card">
+  <div class="card" data-card="hotsearch">
     <div class="card-header">
       <div>
         <div class="card-title">热搜榜单</div>
@@ -345,7 +337,7 @@
   </div>
 
   <!-- 行业资讯 -->
-  <div class="card">
+  <div class="card" data-card="news">
     <div class="card-header">
       <div>
         <div class="card-title">行业资讯</div>
@@ -360,7 +352,7 @@
   </div>
 
   <!-- 待办事项 -->
-  <div class="card">
+  <div class="card" data-card="todo">
     <div class="card-header">
       <div>
         <div class="card-title">待办事项</div>
@@ -374,7 +366,7 @@
   </div>
 
   <!-- 今日日程 -->
-  <div class="card">
+  <div class="card" data-card="schedule">
     <div class="card-header">
       <div>
         <div class="card-title">今日日程</div>
@@ -388,7 +380,7 @@
   </div>
 
   <!-- 天气 -->
-  <div class="card">
+  <div class="card" data-card="weather">
     <div class="card-header">
       <div>
         <div class="card-title">天气</div>
@@ -402,7 +394,7 @@
   </div>
 
   <!-- 社交媒体 -->
-  <div class="card">
+  <div class="card" data-card="social">
     <div class="card-header">
       <div>
         <div class="card-title">社交媒体</div>
@@ -432,6 +424,9 @@
 (function () {
   'use strict';
 
+  // ===== 注册 GSAP 插件 =====
+  gsap.registerPlugin(Flip);
+
   // ===== 登录检查 =====
   api.checkAuth().catch(function () {
     window.location.href = '/';
@@ -440,10 +435,214 @@
   // ===== 日期（显示在日程卡片） =====
   document.getElementById('scheduleDate').textContent = app.formatDate();
 
-  // ===== 热搜数据 =====
+  // ===== 布局系统 =====
+  var layouts = {
+    landscape: {
+      S0: { cols: '1fr 1fr 1fr', rows: '1fr 1fr' },
+      S1: { cols: '1fr 1fr 1fr', rows: '1fr 1fr' },
+      S2: { cols: '1fr 1fr 1fr', rows: '1fr 1fr' },
+      S3: { cols: '1fr 1fr', rows: '1fr 1fr' }
+    },
+    portrait: {
+      S0: { cols: '1fr 1fr', rows: '1fr 1fr 1fr' },
+      S1: { cols: '1fr 1fr', rows: '1fr 1fr 1fr' },
+      S2: { cols: '1fr 1fr', rows: '1fr 1fr 1fr' },
+      S3: { cols: '1fr 1fr', rows: '1fr 1fr' }
+    }
+  };
+
+  var cardPositions = {
+    landscape: {
+      S0: { hotsearch: '1 / 1', news: '2 / 1', todo: '3 / 1', schedule: '1 / 2', weather: '2 / 2', social: '3 / 2' },
+      S1: { hotsearch: '1 / 1', news: '2 / 1', todo: '3 / 1', weather: '1 / 2 span 2', social: '3 / 2' },
+      S2: { hotsearch: '1 / 1', news: '2 / 1', schedule: '3 / 1', weather: '1 / 2 span 2', social: '3 / 2' },
+      S3: { hotsearch: '1 / 1', news: '2 / 1', weather: '1 / 2', social: '2 / 2' }
+    },
+    portrait: {
+      S0: { hotsearch: '1 / 1', news: '2 / 1', todo: '1 / 2', schedule: '2 / 2', weather: '1 / 3', social: '2 / 3' },
+      S1: { hotsearch: '1 / 1', news: '2 / 1', weather: '1 / 2', social: '2 / 2', todo: '1 / 3 span 2' },
+      S2: { hotsearch: '1 / 1', news: '2 / 1', weather: '1 / 2', social: '2 / 2', schedule: '1 / 3 span 2' },
+      S3: { hotsearch: '1 / 1', news: '2 / 1', weather: '1 / 2', social: '2 / 2' }
+    }
+  };
+
+  // 卡片优先级（数字越小优先级越高）
+  var cardPriority = {
+    hotsearch: 1,
+    news: 2,
+    weather: 3,
+    social: 4,
+    todo: 5,
+    schedule: 6
+  };
+
+  // ===== 防抖机制 =====
+  var emptyCounters = { todo: 0, schedule: 0 };
+  var HIDE_THRESHOLD = 2;
+
+  // ===== 状态管理 =====
   var dashboardData = null;
   var currentPlatform = 'weibo';
+  var currentState = 'S0';
+  var currentData = null;
 
+  // ===== 工具函数 =====
+  function getTodayEvents(calendar) {
+    var _n = new Date();
+    var today = _n.getFullYear() + '-' + String(_n.getMonth() + 1).padStart(2, '0') + '-' + String(_n.getDate()).padStart(2, '0');
+    return (calendar && calendar.events || []).filter(function (evt) {
+      return evt.start_time && evt.start_time.slice(0, 10) === today;
+    });
+  }
+
+  function isLandscape() {
+    return window.innerWidth > window.innerHeight;
+  }
+
+  function getOrientation() {
+    return isLandscape() ? 'landscape' : 'portrait';
+  }
+
+  // ===== 状态检测 =====
+  function detectState(data) {
+    var hasTodos = data.todos && data.todos.items && data.todos.items.length > 0;
+    var hasSchedule = getTodayEvents(data.calendar).length > 0;
+
+    if (hasTodos && hasSchedule) return 'S0';
+    if (hasTodos && !hasSchedule) return 'S1';
+    if (!hasTodos && hasSchedule) return 'S2';
+    return 'S3';
+  }
+
+  function updateEmptyCounters(data) {
+    var hasTodos = data.todos && data.todos.items && data.todos.items.length > 0;
+    var hasSchedule = getTodayEvents(data.calendar).length > 0;
+
+    if (hasTodos) emptyCounters.todo = 0;
+    else emptyCounters.todo++;
+
+    if (hasSchedule) emptyCounters.schedule = 0;
+    else emptyCounters.schedule++;
+  }
+
+  function getEffectiveState(data) {
+    var hasTodos = emptyCounters.todo < HIDE_THRESHOLD;
+    var hasSchedule = emptyCounters.schedule < HIDE_THRESHOLD;
+
+    if (hasTodos && hasSchedule) return 'S0';
+    if (hasTodos && !hasSchedule) return 'S1';
+    if (!hasTodos && hasSchedule) return 'S2';
+    return 'S3';
+  }
+
+  // ===== 布局应用 =====
+  function applyLayout(state) {
+    var orientation = getOrientation();
+    var layout = layouts[orientation][state];
+    var positions = cardPositions[orientation][state];
+
+    var grid = document.querySelector('.grid');
+    grid.style.gridTemplateColumns = layout.cols;
+    grid.style.gridTemplateRows = layout.rows;
+
+    // 设置每张卡片的位置和可见性
+    document.querySelectorAll('[data-card]').forEach(function (card) {
+      var cardId = card.getAttribute('data-card');
+      if (positions[cardId]) {
+        var pos = positions[cardId].split(' ');
+        card.style.gridColumn = pos[0];
+        card.style.gridRow = pos[1] || '';
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function getVisibleCards(state) {
+    var orientation = getOrientation();
+    return Object.keys(cardPositions[orientation][state]);
+  }
+
+  function getHiddenCards(oldState, newState) {
+    var oldVisible = getVisibleCards(oldState);
+    var newVisible = getVisibleCards(newState);
+    return oldVisible.filter(function (id) { return newVisible.indexOf(id) === -1; });
+  }
+
+  function getShownCards(oldState, newState) {
+    var oldVisible = getVisibleCards(oldState);
+    var newVisible = getVisibleCards(newState);
+    return newVisible.filter(function (id) { return oldVisible.indexOf(id) === -1; });
+  }
+
+  // ===== GSAP 动画 =====
+  async function hideCards(cardIds) {
+    var cards = cardIds.map(function (id) { return document.querySelector('[data-card="' + id + '"]'); }).filter(Boolean);
+    if (!cards.length) return;
+
+    // 阶段1：空态闪现（1.5秒）
+    await new Promise(function (r) { setTimeout(r, 1500); });
+
+    // 阶段2：卡片退场（250ms + stagger）
+    gsap.to(cards, {
+      autoAlpha: 0,
+      scale: 0.96,
+      duration: 0.25,
+      stagger: { amount: 0.08, from: 'edges' },
+      ease: 'power2.out'
+    });
+
+    // 等待退场动画完成
+    await new Promise(function (r) { setTimeout(r, 350) });
+
+    // 设置 display: none
+    cards.forEach(function (card) { card.style.display = 'none'; });
+  }
+
+  function flipLayout(oldState, newState) {
+    // First: 记录当前状态
+    var state = Flip.getState('[data-card]');
+
+    // Last: 应用新布局
+    applyLayout(newState);
+
+    // Invert + Play: 动画过渡
+    Flip.from(state, {
+      duration: 0.35,
+      ease: 'power2.out',
+      scale: true,
+      absolute: false,
+      nested: false
+    });
+  }
+
+  async function showCards(cardIds) {
+    var cards = cardIds.map(function (id) { return document.querySelector('[data-card="' + id + '"]'); }).filter(Boolean);
+    if (!cards.length) return;
+
+    // 取消 display: none，设置初始状态
+    cards.forEach(function (card) {
+      card.style.display = '';
+      gsap.set(card, { autoAlpha: 0, scale: 0.96 });
+    });
+
+    // FLIP 让位
+    var state = Flip.getState('[data-card]');
+    applyLayout(currentState);
+    Flip.from(state, { duration: 0.35, ease: 'power2.out', scale: true });
+
+    // 渐入动画（不需要空态闪现）
+    gsap.to(cards, {
+      autoAlpha: 1,
+      scale: 1,
+      duration: 0.2,
+      stagger: 0.08,
+      ease: 'power2.out'
+    });
+  }
+
+  // ===== 渲染函数 =====
   function renderHotList(platform) {
     var list = document.getElementById('hotList');
     if (!dashboardData || !dashboardData.hotsearch || !dashboardData.hotsearch.platforms) {
@@ -464,16 +663,6 @@
     }).join('');
   }
 
-  document.getElementById('hotTabs').addEventListener('click', function (e) {
-    var tab = e.target.closest('.tab');
-    if (!tab) return;
-    this.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
-    tab.classList.add('active');
-    currentPlatform = tab.getAttribute('data-platform');
-    renderHotList(currentPlatform);
-  });
-
-  // ===== 行业资讯 =====
   function renderNews(items) {
     var body = document.getElementById('newsBody');
     if (!items || !items.length) {
@@ -492,7 +681,6 @@
     }).join('');
   }
 
-  // ===== 待办事项 =====
   var todos = [];
 
   function renderTodos(items) {
@@ -514,23 +702,6 @@
     }).join('');
   }
 
-  document.getElementById('todoBody').addEventListener('click', function (e) {
-    var check = e.target.closest('.todo-check');
-    if (!check) return;
-    var id = parseInt(check.getAttribute('data-id'), 10);
-    var todo = todos.find(function (t) { return t.id === id; });
-    if (!todo) return;
-    var prevCompleted = todo.completed;
-    todo.completed = !prevCompleted;
-    renderTodos(todos);
-    api.updateTodo(id, { completed: todo.completed }).catch(function () {
-      todo.completed = prevCompleted;
-      renderTodos(todos);
-      app.showToast('操作失败', 'error');
-    });
-  });
-
-  // ===== 今日日程 =====
   function renderSchedule(events) {
     var body = document.getElementById('scheduleBody');
     if (!events || !events.length) {
@@ -560,7 +731,6 @@
     }).join('');
   }
 
-  // ===== 天气 =====
   var wmoDescriptions = {
     0: '晴', 1: '多云', 2: '多云', 3: '多云',
     45: '雾', 48: '雾',
@@ -611,8 +781,6 @@
       '</div>';
   }
 
-  // ===== 社交媒体 =====
-  // 只显示用户配置了账号的平台
   var platformConfig = {
     bilibili: { label: 'B站', icon: 'smart_display' },
     youtube: { label: 'YouTube', icon: 'play_circle' },
@@ -622,11 +790,8 @@
 
   function renderSocial(accounts) {
     var body = document.getElementById('socialBody');
-
-    // 获取用户配置的平台列表
     var configuredPlatforms = accounts ? Object.keys(accounts) : [];
 
-    // 如果没有配置任何账号，显示提示信息
     if (configuredPlatforms.length === 0) {
       body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">请在配置中心添加社交媒体账号</div>';
       return;
@@ -635,7 +800,7 @@
     var html = '<div class="social-grid">';
     configuredPlatforms.forEach(function (platformKey) {
       var config = platformConfig[platformKey];
-      if (!config) return; // 跳过不支持的平台
+      if (!config) return;
 
       var data = accounts[platformKey];
       var value = data && data.follower_count != null ? data.follower_count.toLocaleString() : '--';
@@ -650,52 +815,119 @@
     body.innerHTML = html;
   }
 
-  // ===== 加载 Dashboard 数据 =====
-  function loadDashboard() {
-    api.getDashboard().then(function (data) {
-      dashboardData = data;
+  function renderAll(data) {
+    dashboardData = data;
 
-      // 热搜
-      renderHotList(currentPlatform);
+    renderHotList(currentPlatform);
+    renderNews(data.feeds && data.feeds.items);
+    renderTodos(data.todos && data.todos.items);
 
-      // 行业资讯
-      renderNews(data.feeds && data.feeds.items);
+    var todayEvents = getTodayEvents(data.calendar);
+    renderSchedule(todayEvents);
 
-      // 待办事项
-      renderTodos(data.todos && data.todos.items);
-
-      // 今日日程（只显示今天的事件，使用本地时间）
-      var _n = new Date();
-      var today = _n.getFullYear() + '-' + String(_n.getMonth() + 1).padStart(2, '0') + '-' + String(_n.getDate()).padStart(2, '0');
-      var todayEvents = (data.calendar && data.calendar.events || []).filter(function (evt) {
-        return evt.start_time && evt.start_time.slice(0, 10) === today;
-      });
-      renderSchedule(todayEvents);
-
-      // 天气
-      renderWeather(data.weather);
-
-      // 粉丝数据
-      renderSocial(data.social && data.social.accounts);
-    }).catch(function () {
-      // 静默失败
-    });
+    renderWeather(data.weather);
+    renderSocial(data.social && data.social.accounts);
   }
 
+  // ===== 加载 Dashboard 数据 =====
+  async function loadDashboard() {
+    try {
+      var data = await api.getDashboard();
+      currentData = data;
+
+      // 更新防抖计数器
+      updateEmptyCounters(data);
+
+      // 检测新状态
+      var newState = getEffectiveState(data);
+
+      if (newState !== currentState) {
+        // 状态变化，执行动画
+        var oldState = currentState;
+        currentState = newState;
+
+        // 渲染数据（包括空状态文案）
+        renderAll(data);
+
+        // 计算需要隐藏/显示的卡片
+        var toHide = getHiddenCards(oldState, newState);
+        var toShow = getShownCards(oldState, newState);
+
+        // 执行动画
+        if (toHide.length) await hideCards(toHide);
+        flipLayout(oldState, newState);
+        if (toShow.length) await showCards(toShow);
+      } else {
+        // 状态未变化，只更新数据
+        renderAll(data);
+      }
+    } catch (e) {
+      // 静默失败
+    }
+  }
+
+  // ===== 初始化 =====
   loadDashboard();
   setInterval(loadDashboard, 30000);
 
-  // ===== GSAP 动画 =====
-  // 页面加载时卡片淡入动画
+  // 初始布局
+  currentState = detectState(dashboardData || { todos: { items: [] }, calendar: { events: [] } });
+  applyLayout(currentState);
+
+  // 页面加载动画
   gsap.from('.card', {
-    opacity: 0,
+    autoAlpha: 0,
     y: 20,
     duration: 0.5,
     stagger: 0.1,
     ease: 'power2.out'
   });
 
-  // ===== 登出按钮 =====
+  // ===== resize 监听 =====
+  var resizeTimeout;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function () {
+      if (currentData) {
+        var newState = getEffectiveState(currentData);
+        if (newState !== currentState) {
+          var oldState = currentState;
+          currentState = newState;
+          flipLayout(oldState, newState);
+        } else {
+          // 只是旋转，重新应用布局
+          applyLayout(currentState);
+        }
+      }
+    }, 100);
+  });
+
+  // ===== 事件绑定 =====
+  document.getElementById('hotTabs').addEventListener('click', function (e) {
+    var tab = e.target.closest('.tab');
+    if (!tab) return;
+    this.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    currentPlatform = tab.getAttribute('data-platform');
+    renderHotList(currentPlatform);
+  });
+
+  document.getElementById('todoBody').addEventListener('click', function (e) {
+    var check = e.target.closest('.todo-check');
+    if (!check) return;
+    var id = parseInt(check.getAttribute('data-id'), 10);
+    var todo = todos.find(function (t) { return t.id === id; });
+    if (!todo) return;
+    var prevCompleted = todo.completed;
+    todo.completed = !prevCompleted;
+    renderTodos(todos);
+    api.updateTodo(id, { completed: todo.completed }).catch(function () {
+      todo.completed = prevCompleted;
+      renderTodos(todos);
+      app.showToast('操作失败', 'error');
+    });
+  });
+
   document.getElementById('logoutBtn').addEventListener('click', function () {
     api.logout().then(function () {
       window.location.href = '/';
