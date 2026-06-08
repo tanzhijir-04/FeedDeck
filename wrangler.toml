@@ -12,12 +12,3 @@ database_id = "<D1_DATABASE_ID>"  # 替换为实际 ID
 [[kv_namespaces]]
 binding = "KV"
 id = "<KV_NAMESPACE_ID>"  # 替换为实际 ID
-
-# 定时任务
-[triggers]
-crons = [
-  "*/5 * * * *",   # fetch-feeds + fetch-hotsearch（每5分钟）
-  "*/15 * * * *",  # sync-ics（每15分钟）
-  "*/30 * * * *",  # fetch-weather + fetch-social（每30分钟）
-  "0 0 * * *"      # cleanup（每天0点）
-]
