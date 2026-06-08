@@ -1,59 +1,58 @@
 // Cron: fetch-hotsearch（每5分钟）
 // 抓取各平台热搜数据
 
-export default {
-  async scheduled(event, env) {
-    const taskName = 'fetch-hotsearch';
+export async function onRequestGet(context) {
+  const { env } = context;
+  const taskName = 'fetch-hotsearch';
 
-    try {
-      const lastRun = await env.DB.prepare(
-        'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
-      ).bind(taskName).first();
+  try {
+    const lastRun = await env.DB.prepare(
+      'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
+    ).bind(taskName).first();
 
-      if (lastRun?.last_run_at) {
-        const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-        if (elapsed < 4 * 60 * 1000) return;
-      }
-
-      // 获取启用的平台
-      const platformsStr = await env.KV.get('config:hotsearch_platforms');
-      if (!platformsStr) return;
-      const platforms = JSON.parse(platformsStr);
-      if (!platforms.length) return;
-
-      // 并行抓取所有平台
-      const fetchers = {
-        weibo: fetchWeibo,
-        zhihu: fetchZhihu,
-        bilibili: fetchBilibili,
-        douyin: fetchDouyin,
-        baidu: fetchBaidu,
-        toutiao: fetchToutiao,
-        github: fetchGithub,
-        reddit: fetchReddit
-      };
-
-      const results = await Promise.allSettled(
-        platforms.map(p => {
-          const fn = fetchers[p];
-          return fn ? fn(env.DB) : Promise.resolve();
-        })
-      );
-
-      const successCount = results.filter(r => r.status === 'fulfilled').length;
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), ?)`
-      ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
-
-    } catch {
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), 'error')`
-      ).bind(taskName).run().catch(() => {});
+    if (lastRun?.last_run_at) {
+      const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
+      if (elapsed < 4 * 60 * 1000) return;
     }
+
+    // 获取启用的平台
+    const platformsStr = await env.KV.get('config:hotsearch_platforms');
+    if (!platformsStr) return;
+    const platforms = JSON.parse(platformsStr);
+    if (!platforms.length) return;
+
+    // 并行抓取所有平台
+    const fetchers = {
+      weibo: fetchWeibo,
+      zhihu: fetchZhihu,
+      bilibili: fetchBilibili,
+      douyin: fetchDouyin,
+      baidu: fetchBaidu,
+      toutiao: fetchToutiao,
+      github: fetchGithub,
+      reddit: fetchReddit
+    };
+
+    const results = await Promise.allSettled(
+      platforms.map(p => {
+        const fn = fetchers[p];
+        return fn ? fn(env.DB) : Promise.resolve();
+      })
+    );
+
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), ?)`
+    ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
+
+  } catch {
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), 'error')`
+    ).bind(taskName).run().catch(() => {});
   }
-};
+}
 
 // --- 各平台抓取器 ---
 

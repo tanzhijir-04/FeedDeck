@@ -447,51 +447,29 @@
     window.location.href = '/';
   });
 
-  // ===== 日期（显示在天气卡片） =====
-  document.getElementById('scheduleDate').textContent = app.formatDate().split(' ')[0];
+  // ===== 日期（显示在日程卡片） =====
+  document.getElementById('scheduleDate').textContent = app.formatDate();
 
-  // ===== 热搜 Mock 数据 =====
-  var hotData = {
-    weibo: [
-      { rank: 1, text: '下一代人工智能模型将改变传统行业格局', heat: '52万' },
-      { rank: 2, text: '全球开发者大会达成开源协议', heat: '38万' },
-      { rank: 3, text: '新能源汽车出口量大幅增长', heat: '27万' },
-      { rank: 4, text: '国产芯片技术突破量产瓶颈', heat: '21万' },
-      { rank: 5, text: '远程办公工具月活突破新高', heat: '18万' }
-    ],
-    zhihu: [
-      { rank: 1, text: '2026年有哪些值得关注的技术趋势？', heat: '1892' },
-      { rank: 2, text: '如何评价 Claude 4 系列模型的表现？', heat: '1547' },
-      { rank: 3, text: '为什么越来越多人选择自由职业？', heat: '982' },
-      { rank: 4, text: '学习编程的最佳路径是什么？', heat: '876' },
-      { rank: 5, text: '人工智能会取代哪些工作岗位？', heat: '754' }
-    ],
-    bilibili: [
-      { rank: 1, text: '【科技】深度解析下一代AI架构', heat: '324万' },
-      { rank: 2, text: '独立开发者的一天 VLOG', heat: '186万' },
-      { rank: 3, text: '前端框架2026年终盘点', heat: '98万' },
-      { rank: 4, text: '用Rust重写我的开源项目', heat: '87万' },
-      { rank: 5, text: '程序员高效工作的一天', heat: '65万' }
-    ],
-    douyin: [
-      { rank: 1, text: 'AI绘画新玩法惊艳全网', heat: '892万' },
-      { rank: 2, text: '程序员下班后的副业收入', heat: '654万' },
-      { rank: 3, text: '这个工具让效率翻倍', heat: '432万' },
-      { rank: 4, text: '远程办公装备分享', heat: '321万' },
-      { rank: 5, text: '一个人的创业故事', heat: '218万' }
-    ]
-  };
-
+  // ===== 热搜数据 =====
+  var dashboardData = null;
   var currentPlatform = 'weibo';
 
   function renderHotList(platform) {
     var list = document.getElementById('hotList');
-    var data = hotData[platform] || hotData.weibo;
+    if (!dashboardData || !dashboardData.hotsearch || !dashboardData.hotsearch.platforms) {
+      list.innerHTML = '<li class="hot-item"><span class="hot-text" style="color:var(--text-muted);">暂无数据</span></li>';
+      return;
+    }
+    var data = dashboardData.hotsearch.platforms[platform] || [];
+    if (!data.length) {
+      list.innerHTML = '<li class="hot-item"><span class="hot-text" style="color:var(--text-muted);">暂无数据</span></li>';
+      return;
+    }
     list.innerHTML = data.map(function (item) {
       return '<li class="hot-item">' +
         '<span class="hot-rank ' + (item.rank <= 3 ? 'top' : 'normal') + '">' + item.rank + '</span>' +
-        '<span class="hot-text">' + item.text + '</span>' +
-        '<span class="hot-heat">' + item.heat + '</span>' +
+        '<span class="hot-text">' + item.title + '</span>' +
+        '<span class="hot-heat">' + (item.heat || '') + '</span>' +
       '</li>';
     }).join('');
   }
@@ -505,42 +483,42 @@
     renderHotList(currentPlatform);
   });
 
-  renderHotList('weibo');
+  // ===== 行业资讯 =====
+  function renderNews(items) {
+    var body = document.getElementById('newsBody');
+    if (!items || !items.length) {
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无资讯</div>';
+      return;
+    }
+    document.getElementById('newsCount').textContent = items.length + ' 条资讯';
+    body.innerHTML = items.map(function (item) {
+      var link = item.link ? '<a href="' + item.link + '" target="_blank" style="color:inherit;text-decoration:none;">' : '';
+      var linkEnd = item.link ? '</a>' : '';
+      var time = item.published_at ? app.timeAgo(new Date(item.published_at).getTime()) : '';
+      return '<div class="news-item">' +
+        '<div class="news-title">' + link + item.title + linkEnd + '</div>' +
+        '<div class="news-time">' + time + '</div>' +
+      '</div>';
+    }).join('');
+  }
 
-  // ===== News Mock =====
-  var newsData = [
-    { tag: 'TechNews', title: 'Anthropic 发布 Claude 4：全能型大模型再进化，支持超长上下文', time: '2小时前' },
-    { tag: 'Dev', title: '前端框架 Signals 提案进入第三阶段，多家框架表示支持', time: '3小时前' },
-    { tag: 'AI', title: '研究人员开发出新型神经网络架构，训练效率提升5倍', time: '5小时前' },
-    { tag: 'Design', title: '2026年UI设计趋势：从拟物到极简的轮回', time: '6小时前' }
-  ];
+  // ===== 待办事项 =====
+  var todos = [];
 
-  document.getElementById('newsCount').textContent = '3 个订阅源';
-  document.getElementById('newsBody').innerHTML = newsData.map(function (item) {
-    return '<div class="news-item">' +
-      '<div class="news-meta"><span class="tag tag-primary">' + item.tag + '</span></div>' +
-      '<div class="news-title">' + item.title + '</div>' +
-      '<div class="news-time">' + item.time + '</div>' +
-    '</div>';
-  }).join('');
-
-  // ===== Todos Mock =====
-  var todos = [
-    { id: 1, text: 'Review PR #42 - API authentication module', done: false, deadline: null },
-    { id: 2, text: 'Prepare Q2 report draft', done: false, deadline: '6月8日' },
-    { id: 3, text: 'Update project dependencies', done: true, deadline: null },
-    { id: 4, text: 'Write unit tests for feed parser', done: true, deadline: null }
-  ];
-
-  function renderTodos() {
+  function renderTodos(items) {
+    todos = items || [];
     var body = document.getElementById('todoBody');
-    var pending = todos.filter(function (t) { return !t.done; }).length;
+    var pending = todos.filter(function (t) { return !t.completed; }).length;
     document.getElementById('todoStats').textContent = pending + ' 项待完成';
+    if (!todos.length) {
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无待办</div>';
+      return;
+    }
     body.innerHTML = todos.map(function (item) {
       var dl = item.deadline ? '<span class="todo-deadline">' + item.deadline + '</span>' : '';
-      return '<div class="todo-item ' + (item.done ? 'done' : '') + '">' +
-        '<div class="todo-check ' + (item.done ? 'done' : '') + '" data-id="' + item.id + '"></div>' +
-        '<span class="todo-text">' + item.text + '</span>' +
+      return '<div class="todo-item ' + (item.completed ? 'done' : '') + '">' +
+        '<div class="todo-check ' + (item.completed ? 'done' : '') + '" data-id="' + item.id + '"></div>' +
+        '<span class="todo-text">' + item.title + '</span>' +
         dl +
       '</div>';
     }).join('');
@@ -551,51 +529,94 @@
     if (!check) return;
     var id = parseInt(check.getAttribute('data-id'), 10);
     var todo = todos.find(function (t) { return t.id === id; });
-    if (todo) {
-      todo.done = !todo.done;
-      renderTodos();
-      // TODO: api.updateTodo(id, { done: todo.done })
-    }
+    if (!todo) return;
+    var prevCompleted = todo.completed;
+    todo.completed = !prevCompleted;
+    renderTodos(todos);
+    api.updateTodo(id, { completed: todo.completed }).catch(function () {
+      todo.completed = prevCompleted;
+      renderTodos(todos);
+      app.showToast('操作失败', 'error');
+    });
   });
 
-  renderTodos();
+  // ===== 今日日程 =====
+  function renderSchedule(events) {
+    var body = document.getElementById('scheduleBody');
+    if (!events || !events.length) {
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">今日无日程</div>';
+      return;
+    }
+    var colors = ['#22c55e', '#f97316', '#3b82f6', '#a855f7', '#ef4444'];
+    body.innerHTML = events.map(function (item, i) {
+      var start = item.start_time ? item.start_time.slice(11, 16) : '--:--';
+      var end = item.end_time ? item.end_time.slice(11, 16) : '';
+      var time = end ? start + ' - ' + end : start;
+      var color = colors[i % colors.length];
+      return '<div class="schedule-item">' +
+        '<div class="schedule-time">' + time + '</div>' +
+        '<div class="schedule-dot" style="background:' + color + '"></div>' +
+        '<div class="schedule-content">' +
+          '<div class="schedule-title">' + item.title + '</div>' +
+          (item.description ? '<div class="schedule-desc">' + item.description + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
 
-  // ===== Schedule Mock =====
-  var scheduleData = [
-    { time: '09:00 - 09:30', title: '晨间站会', desc: '团队每日同步', color: '#22c55e' },
-    { time: '10:00 - 11:30', title: '产品需求评审', desc: '会议室 A / 线上同步', color: '#f97316' },
-    { time: '14:00 - 15:00', title: '技术方案讨论', desc: 'RSS 模块优化', color: '#3b82f6' },
-    { time: '16:00 - 17:00', title: 'Code Review', desc: '审查本周提交', color: '#f97316' }
-  ];
+  // ===== 天气 =====
+  var wmoDescriptions = {
+    0: '晴', 1: '多云', 2: '多云', 3: '多云',
+    45: '雾', 48: '雾',
+    51: '毛毛雨', 53: '毛毛雨', 55: '毛毛雨',
+    61: '雨', 63: '雨', 65: '雨',
+    71: '雪', 73: '雪', 75: '雪',
+    95: '雷阵雨', 96: '雷阵雨', 99: '雷阵雨'
+  };
 
-  document.getElementById('scheduleBody').innerHTML = scheduleData.map(function (item) {
-    return '<div class="schedule-item">' +
-      '<div class="schedule-time">' + item.time + '</div>' +
-      '<div class="schedule-dot" style="background:' + item.color + '"></div>' +
-      '<div class="schedule-content">' +
-        '<div class="schedule-title">' + item.title + '</div>' +
-        '<div class="schedule-desc">' + item.desc + '</div>' +
+  var wmoIcons = {
+    0: 'light_mode', 1: 'partly_cloudy_day', 2: 'partly_cloudy_day', 3: 'partly_cloudy_day',
+    45: 'foggy', 48: 'foggy',
+    51: 'rainy', 53: 'rainy', 55: 'rainy',
+    61: 'rainy', 63: 'rainy', 65: 'rainy',
+    71: 'weather_snowy', 73: 'weather_snowy', 75: 'weather_snowy',
+    95: 'thunderstorm', 96: 'thunderstorm', 99: 'thunderstorm'
+  };
+
+  function renderWeather(weatherData) {
+    var body = document.getElementById('weatherBody');
+    if (!weatherData || !weatherData.current) {
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无天气数据</div>';
+      return;
+    }
+    var c = weatherData.current;
+    var code = c.weather_code || 0;
+    var desc = wmoDescriptions[code] || '未知';
+    var icon = wmoIcons[code] || 'cloud';
+    var temp = Math.round(c.temperature_2m || 0);
+    var humidity = c.relative_humidity_2m || '--';
+    var wind = c.wind_speed_10m || '--';
+
+    document.getElementById('weatherCity').textContent =
+      (dashboardData && dashboardData.weather_city ? dashboardData.weather_city : '未知') + ' · 每30分钟更新';
+
+    body.innerHTML =
+      '<div class="weather-main">' +
+        '<div class="weather-left">' +
+          '<div class="weather-temp">' + temp + '°</div>' +
+          '<div class="weather-desc">' + desc + '</div>' +
+        '</div>' +
+        '<span class="material-symbols-outlined weather-icon">' + icon + '</span>' +
       '</div>' +
-    '</div>';
-  }).join('');
+      '<div class="weather-details">' +
+        '<div class="weather-detail"><div class="weather-detail-label">湿度</div><div class="weather-detail-value">' + humidity + '%</div></div>' +
+        '<div class="weather-detail"><div class="weather-detail-label">风速</div><div class="weather-detail-value">' + wind + ' km/h</div></div>' +
+      '</div>';
+  }
 
-  // ===== Weather Mock =====
-  document.getElementById('weatherCity').textContent = '北京市 · 每30分钟更新';
-  document.getElementById('weatherBody').innerHTML =
-    '<div class="weather-main">' +
-      '<div class="weather-left">' +
-        '<div class="weather-temp">28°</div>' +
-        '<div class="weather-desc">多云<br/>体感 30°C</div>' +
-      '</div>' +
-      '<span class="material-symbols-outlined weather-icon">partly_cloudy_day</span>' +
-    '</div>' +
-    '<div class="weather-details">' +
-      '<div class="weather-detail"><div class="weather-detail-label">湿度</div><div class="weather-detail-value">45%</div></div>' +
-      '<div class="weather-detail"><div class="weather-detail-label">风速</div><div class="weather-detail-value">12 km/h</div></div>' +
-      '<div class="weather-detail"><div class="weather-detail-label">月相</div><div class="weather-detail-value">32%</div></div>' +
-    '</div>';
-
-  // ===== Social 渲染 =====
+  // ===== 粉丝数据 =====
+  // 已知限制：如果同一平台有多个账号（如两个 B 站账号），后注册的会覆盖前面的。
+  // 当前只支持 B 站一个平台，此问题暂不影响使用。
   function renderSocial(accounts) {
     var body = document.getElementById('socialBody');
     var platforms = [
@@ -619,22 +640,39 @@
     body.innerHTML = html;
   }
 
-  // ===== Auto Refresh (30s) =====
-  var lastUpdate = Date.now();
-
-  function refreshDashboard() {
+  // ===== 加载 Dashboard 数据 =====
+  function loadDashboard() {
     api.getDashboard().then(function (data) {
-      // 更新社交媒体
-      if (data.social && data.social.accounts) {
-        renderSocial(data.social.accounts);
-      }
-      lastUpdate = Date.now();
+      dashboardData = data;
+
+      // 热搜
+      renderHotList(currentPlatform);
+
+      // 行业资讯
+      renderNews(data.feeds && data.feeds.items);
+
+      // 待办事项
+      renderTodos(data.todos && data.todos.items);
+
+      // 今日日程（只显示今天的事件）
+      var today = new Date().toISOString().slice(0, 10);
+      var todayEvents = (data.calendar && data.calendar.events || []).filter(function (evt) {
+        return evt.start_time && evt.start_time.slice(0, 10) === today;
+      });
+      renderSchedule(todayEvents);
+
+      // 天气
+      renderWeather(data.weather);
+
+      // 粉丝数据
+      renderSocial(data.social && data.social.accounts);
     }).catch(function () {
       // 静默失败
     });
   }
 
-  setInterval(refreshDashboard, 30000);
+  loadDashboard();
+  setInterval(loadDashboard, 30000);
 
 })();
 </script>

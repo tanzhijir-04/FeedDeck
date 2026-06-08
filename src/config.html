@@ -320,17 +320,17 @@
         <div class="panel-title">修改密码</div>
         <div class="form-group">
           <label class="form-label">当前密码</label>
-          <input class="form-input" type="password" placeholder="请输入当前密码" style="max-width:320px;"/>
+          <input class="form-input" type="password" id="oldPwdInput" placeholder="请输入当前密码" style="max-width:320px;"/>
         </div>
         <div class="form-group">
           <label class="form-label">新密码</label>
-          <input class="form-input" type="password" placeholder="请输入新密码" style="max-width:320px;"/>
+          <input class="form-input" type="password" id="newPwdInput" placeholder="请输入新密码" style="max-width:320px;"/>
         </div>
         <div class="form-group">
           <label class="form-label">确认新密码</label>
-          <input class="form-input" type="password" placeholder="再次输入新密码" style="max-width:320px;"/>
+          <input class="form-input" type="password" id="confirmPwdInput" placeholder="再次输入新密码" style="max-width:320px;"/>
         </div>
-        <button class="btn btn-primary" onclick="app.showToast('密码已更新','success')">
+        <button class="btn btn-primary" id="changePwdBtn">
           <span class="material-symbols-outlined">lock</span>
           更新密码
         </button>
@@ -371,7 +371,7 @@
           <div class="page-title">RSS 订阅管理</div>
           <div class="page-desc">管理和配置您的所有信息流来源</div>
         </div>
-        <button class="btn btn-primary" onclick="app.showToast('添加 RSS 源')">
+        <button class="btn btn-primary" id="addRssHeaderBtn">
           <span class="material-symbols-outlined">add</span>
           添加源
         </button>
@@ -388,48 +388,6 @@
             </tr>
           </thead>
           <tbody id="rssBody">
-            <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
-                  <span class="material-symbols-outlined">newspaper</span>
-                </span>
-                科技极客前沿
-              </td>
-              <td class="url-cell">https://techgeek.example.com/rss/feed.xml</td>
-              <td><span class="tag tag-success">正常</span></td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(249,115,22,0.15);color:#f97316;">
-                  <span class="material-symbols-outlined">code</span>
-                </span>
-                开发者周刊
-              </td>
-              <td class="url-cell">https://developerweekly.io/atom.xml</td>
-              <td><span class="tag tag-success">正常</span></td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(168,85,247,0.15);color:#a855f7;">
-                  <span class="material-symbols-outlined">design_services</span>
-                </span>
-                UI/UX 设计灵感
-              </td>
-              <td class="url-cell">https://designinspiration.net/feed/</td>
-              <td><span class="tag tag-muted">等待更新</span></td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -439,7 +397,7 @@
           <label class="form-label">快速添加 URL</label>
           <input class="form-input" type="text" placeholder="https://example.com/rss.xml" id="rssUrlInput"/>
         </div>
-        <button class="btn btn-ghost" onclick="app.showToast('验证并添加 RSS 源')">
+        <button class="btn btn-ghost" id="addRssBtn">
           <span class="material-symbols-outlined">link</span>
           验证并添加
         </button>
@@ -453,7 +411,7 @@
           <div class="page-title">热搜平台</div>
           <div class="page-desc">选择要追踪的热搜平台，每5分钟自动更新</div>
         </div>
-        <button class="btn btn-primary" onclick="app.showToast('设置已保存','success')">
+        <button class="btn btn-primary" id="saveHotsearchBtn">
           <span class="material-symbols-outlined">save</span>
           保存设置
         </button>
@@ -470,7 +428,7 @@
               <div class="toggle-desc">实时热门话题，Top 20</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" checked data-platform="weibo"/><span class="toggle-track"></span></label>
         </div>
         <div class="toggle-row">
           <div class="toggle-info">
@@ -482,7 +440,7 @@
               <div class="toggle-desc">优质问答社区热门话题，Top 15</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" checked data-platform="zhihu"/><span class="toggle-track"></span></label>
         </div>
         <div class="toggle-row">
           <div class="toggle-info">
@@ -494,7 +452,7 @@
               <div class="toggle-desc">短视频平台热门内容，Top 20</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" checked data-platform="douyin"/><span class="toggle-track"></span></label>
         </div>
         <div class="toggle-row">
           <div class="toggle-info">
@@ -506,7 +464,7 @@
               <div class="toggle-desc">搜索引擎热点趋势，Top 15</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox"/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" data-platform="baidu"/><span class="toggle-track"></span></label>
         </div>
         <div class="toggle-row">
           <div class="toggle-info">
@@ -518,7 +476,7 @@
               <div class="toggle-desc">新闻资讯热点，Top 15</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox"/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" data-platform="toutiao"/><span class="toggle-track"></span></label>
         </div>
         <div class="toggle-row">
           <div class="toggle-info">
@@ -530,7 +488,7 @@
               <div class="toggle-desc">视频创作者社区热门，Top 15</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" checked data-platform="bilibili"/><span class="toggle-track"></span></label>
         </div>
         <div class="toggle-row">
           <div class="toggle-info">
@@ -542,7 +500,7 @@
               <div class="toggle-desc">开源项目热度排行，每日更新</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" checked data-platform="github"/><span class="toggle-track"></span></label>
         </div>
         <div class="toggle-row">
           <div class="toggle-info">
@@ -554,7 +512,7 @@
               <div class="toggle-desc">全球社区讨论热点，Top 15</div>
             </div>
           </div>
-          <label class="toggle"><input type="checkbox"/><span class="toggle-track"></span></label>
+          <label class="toggle"><input type="checkbox" data-platform="reddit"/><span class="toggle-track"></span></label>
         </div>
       </div>
     </div>
@@ -632,7 +590,7 @@
           <div class="page-title">日历订阅</div>
           <div class="page-desc">管理 ICS 日历订阅和日程数据源（v2 功能，每15分钟同步）</div>
         </div>
-        <button class="btn btn-primary" onclick="app.showToast('添加日历订阅')">
+        <button class="btn btn-primary" id="addIcsHeaderBtn">
           <span class="material-symbols-outlined">add</span>
           添加订阅
         </button>
@@ -649,37 +607,7 @@
               <th style="text-align:right;">操作</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(249,115,22,0.12);color:var(--primary);">
-                  <span class="material-symbols-outlined">event</span>
-                </span>
-                Google 日历
-              </td>
-              <td class="url-cell">https://calendar.google.com/calendar/ical/.../basic.ics</td>
-              <td><span class="tag tag-success">同步中</span></td>
-              <td style="font-size:12px;color:var(--text-muted);">10:35</td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;">
-                  <span class="material-symbols-outlined">event</span>
-                </span>
-                团队日程
-              </td>
-              <td class="url-cell">https://outlook.office365.com/calendar/.../calendar.ics</td>
-              <td><span class="tag tag-success">同步中</span></td>
-              <td style="font-size:12px;color:var(--text-muted);">10:35</td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
-              </td>
-            </tr>
+          <tbody id="calendarBody">
           </tbody>
         </table>
       </div>
@@ -687,9 +615,9 @@
       <div class="quick-add" style="margin-top:16px;">
         <div class="form-group">
           <label class="form-label">ICS 订阅地址</label>
-          <input class="form-input" type="text" placeholder="https://example.com/calendar.ics"/>
+          <input class="form-input" type="text" id="icsUrlInput" placeholder="https://example.com/calendar.ics"/>
         </div>
-        <button class="btn btn-ghost" onclick="app.showToast('验证并添加 ICS 订阅')">
+        <button class="btn btn-ghost" id="addIcsBtn">
           <span class="material-symbols-outlined">link</span>
           验证并添加
         </button>
@@ -699,27 +627,27 @@
         <div class="panel-title">手动添加日程</div>
         <div class="form-group">
           <label class="form-label">标题</label>
-          <input class="form-input" type="text" placeholder="会议主题" style="max-width:400px;"/>
+          <input class="form-input" type="text" id="eventTitle" placeholder="会议主题" style="max-width:400px;"/>
         </div>
         <div style="display:flex;gap:12px;">
           <div class="form-group">
             <label class="form-label">日期</label>
-            <input class="form-input" type="date" style="max-width:200px;"/>
+            <input class="form-input" type="date" id="eventDate" style="max-width:200px;"/>
           </div>
           <div class="form-group">
             <label class="form-label">开始时间</label>
-            <input class="form-input" type="time" style="max-width:160px;"/>
+            <input class="form-input" type="time" id="eventStart" style="max-width:160px;"/>
           </div>
           <div class="form-group">
             <label class="form-label">结束时间</label>
-            <input class="form-input" type="time" style="max-width:160px;"/>
+            <input class="form-input" type="time" id="eventEnd" style="max-width:160px;"/>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">备注</label>
-          <input class="form-input" type="text" placeholder="可选备注信息" style="max-width:400px;"/>
+          <input class="form-input" type="text" id="eventDesc" placeholder="可选备注信息" style="max-width:400px;"/>
         </div>
-        <button class="btn btn-primary" onclick="app.showToast('日程已添加','success')">
+        <button class="btn btn-primary" id="addEventBtn">
           <span class="material-symbols-outlined">add</span>
           添加日程
         </button>
@@ -781,6 +709,7 @@
 (function () {
   'use strict';
 
+  // ===== 侧边栏导航 =====
   var nav = document.getElementById('sideNav');
   var footer = document.querySelector('.sidebar-footer');
   var allLinks = document.querySelectorAll('[data-section]');
@@ -804,15 +733,140 @@
     if (link) switchSection(link.getAttribute('data-section'));
   });
 
-  // RSS 删除确认
+  // ===== 密码修改 =====
+  document.getElementById('changePwdBtn').addEventListener('click', function () {
+    var oldPwd = document.getElementById('oldPwdInput').value;
+    var newPwd = document.getElementById('newPwdInput').value;
+    var confirmPwd = document.getElementById('confirmPwdInput').value;
+
+    if (!oldPwd || !newPwd || !confirmPwd) {
+      app.showToast('请填写所有密码字段', 'error');
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      app.showToast('新密码与确认密码不一致', 'error');
+      return;
+    }
+
+    api.changePassword(oldPwd, newPwd).then(function () {
+      app.showToast('密码已更新', 'success');
+      document.getElementById('oldPwdInput').value = '';
+      document.getElementById('newPwdInput').value = '';
+      document.getElementById('confirmPwdInput').value = '';
+    }).catch(function (err) {
+      app.showToast(err.message || '密码更新失败', 'error');
+    });
+  });
+
+  // ===== 天气设置 =====
+  document.getElementById('saveWeatherBtn').addEventListener('click', function () {
+    var city = document.getElementById('weatherCity').value.trim();
+    if (!city) {
+      app.showToast('请输入城市名称', 'error');
+      return;
+    }
+
+    api.updateConfig({ weather_city: city }).then(function () {
+      app.showToast('天气设置已保存', 'success');
+    }).catch(function () {
+      app.showToast('保存失败', 'error');
+    });
+  });
+
+  // ===== RSS 订阅管理 =====
+  function renderRssList(feeds) {
+    var body = document.getElementById('rssBody');
+    if (!feeds || !feeds.length) {
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">暂无订阅源</td></tr>';
+      return;
+    }
+    var icons = ['newspaper', 'code', 'design_services', 'rss_feed', 'feed'];
+    var colors = ['#3b82f6', '#f97316', '#a855f7', '#22c55e', '#ef4444'];
+    body.innerHTML = feeds.map(function (feed, i) {
+      var hostname = '';
+      try { hostname = new URL(feed.url).hostname; } catch (e) { hostname = feed.url; }
+      var icon = icons[i % icons.length];
+      var color = colors[i % colors.length];
+      return '<tr>' +
+        '<td>' +
+          '<span class="source-icon" style="background:rgba(59,130,246,0.15);color:' + color + ';">' +
+            '<span class="material-symbols-outlined">' + icon + '</span>' +
+          '</span>' +
+          hostname +
+        '</td>' +
+        '<td class="url-cell">' + feed.url + '</td>' +
+        '<td><span class="tag tag-success">正常</span></td>' +
+        '<td style="text-align:right;">' +
+          '<button class="icon-btn delete" data-key="' + feed.key + '" title="删除">' +
+            '<span class="material-symbols-outlined">delete</span>' +
+          '</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function addRssFeed(url) {
+    if (!url) return;
+    api.addRss(url).then(function () {
+      app.showToast('添加成功', 'success');
+      loadRssFeeds();
+    }).catch(function (err) {
+      app.showToast(err.message || '添加失败', 'error');
+    });
+  }
+
+  function loadRssFeeds() {
+    api.getConfig().then(function (config) {
+      renderRssList(config.rss_feeds || []);
+    }).catch(function () {
+      renderRssList([]);
+    });
+  }
+
   document.getElementById('rssBody').addEventListener('click', function (e) {
     var del = e.target.closest('.delete');
     if (!del) return;
+    var key = del.getAttribute('data-key');
     app.confirm('确定要删除这个 RSS 源吗？').then(function (ok) {
-      if (ok) {
-        del.closest('tr').remove();
+      if (!ok) return;
+      api.deleteRss(key).then(function () {
         app.showToast('已删除', 'success');
+        loadRssFeeds();
+      }).catch(function (err) {
+        app.showToast(err.message || '删除失败', 'error');
+      });
+    });
+  });
+
+  document.getElementById('addRssHeaderBtn').addEventListener('click', function () {
+    var url = prompt('请输入 RSS 订阅地址：');
+    if (url) addRssFeed(url);
+  });
+
+  document.getElementById('addRssBtn').addEventListener('click', function () {
+    var url = document.getElementById('rssUrlInput').value.trim();
+    if (!url) {
+      app.showToast('请输入 URL', 'error');
+      return;
+    }
+    addRssFeed(url);
+    document.getElementById('rssUrlInput').value = '';
+  });
+
+  // ===== 热搜平台开关 =====
+  document.getElementById('saveHotsearchBtn').addEventListener('click', function () {
+    var checkboxes = document.querySelectorAll('#hotPlatforms input[type="checkbox"]');
+    var enabled = [];
+    checkboxes.forEach(function (cb) {
+      if (cb.checked) {
+        var platform = cb.getAttribute('data-platform');
+        if (platform) enabled.push(platform);
       }
+    });
+    api.updateConfig({ hotsearch_platforms: enabled }).then(function () {
+      app.showToast('设置已保存', 'success');
+    }).catch(function () {
+      app.showToast('保存失败', 'error');
     });
   });
 
@@ -837,7 +891,7 @@
           '<span class="source-icon" style="background:rgba(59,130,246,0.15);color:' + p.color + ';">' +
             '<span class="material-symbols-outlined">' + p.icon + '</span>' +
           '</span>' +
-          'Bilibili' +
+          acc.platform +
         '</td>' +
         '<td>' + acc.accountId + '</td>' +
         '<td>' + (acc.name || '-') + '</td>' +
@@ -860,38 +914,7 @@
     });
   }
 
-  document.getElementById('addSocialBtn').addEventListener('click', function () {
-    var platform = document.getElementById('socialPlatform').value;
-    var accountId = document.getElementById('socialAccountId').value.trim();
-    var name = document.getElementById('socialName').value.trim();
-
-    if (!accountId) {
-      app.showToast('请输入账号 ID', 'error');
-      return;
-    }
-
-    // 检查是否已存在
-    var exists = socialAccounts.some(function (acc) {
-      return acc.platform === platform && acc.accountId === accountId;
-    });
-    if (exists) {
-      app.showToast('该账号已添加', 'error');
-      return;
-    }
-
-    socialAccounts.push({ platform: platform, accountId: accountId, name: name || '' });
-
-    api.updateConfig({ social_accounts: socialAccounts }).then(function () {
-      app.showToast('添加成功', 'success');
-      document.getElementById('socialAccountId').value = '';
-      document.getElementById('socialName').value = '';
-      renderSocialAccounts();
-    }).catch(function () {
-      app.showToast('保存失败', 'error');
-      socialAccounts.pop();
-    });
-  });
-
+  // 只保留 saveSocialBtn（底部表单中的按钮），删除 addSocialBtn 的重复逻辑
   document.getElementById('saveSocialBtn').addEventListener('click', function () {
     var platform = document.getElementById('socialPlatform').value;
     var accountId = document.getElementById('socialAccountId').value.trim();
@@ -902,7 +925,6 @@
       return;
     }
 
-    // 检查是否已存在
     var exists = socialAccounts.some(function (acc) {
       return acc.platform === platform && acc.accountId === accountId;
     });
@@ -943,37 +965,148 @@
     });
   });
 
-  // 初始化加载
-  loadSocialAccounts();
+  // Header 中的"添加账号"按钮改为滚动到底部表单
+  document.getElementById('addSocialBtn').addEventListener('click', function () {
+    document.getElementById('socialAccountId').focus();
+  });
 
-  // ===== 天气设置 =====
-  document.getElementById('saveWeatherBtn').addEventListener('click', function () {
-    var city = document.getElementById('weatherCity').value.trim();
-    if (!city) {
-      app.showToast('请输入城市名称', 'error');
+  // ===== 日历订阅管理 =====
+  function renderCalendarList(subs) {
+    var body = document.getElementById('calendarBody');
+    if (!subs || !subs.length) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">暂无日历订阅</td></tr>';
       return;
     }
+    body.innerHTML = subs.map(function (sub) {
+      return '<tr>' +
+        '<td>' +
+          '<span class="source-icon" style="background:rgba(249,115,22,0.12);color:var(--primary);">' +
+            '<span class="material-symbols-outlined">event</span>' +
+          '</span>' +
+          (sub.name || sub.id) +
+        '</td>' +
+        '<td class="url-cell">' + sub.url + '</td>' +
+        '<td><span class="tag tag-success">同步中</span></td>' +
+        '<td style="font-size:12px;color:var(--text-muted);">--</td>' +
+        '<td style="text-align:right;">' +
+          '<button class="icon-btn delete" data-id="' + sub.id + '" title="删除">' +
+            '<span class="material-symbols-outlined">delete</span>' +
+          '</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
 
-    api.updateConfig({ weather_city: city }).then(function () {
-      app.showToast('天气设置已保存', 'success');
+  function loadCalendarSubs() {
+    api.getConfig().then(function (config) {
+      renderCalendarList(config.calendar_subs || []);
     }).catch(function () {
-      app.showToast('保存失败', 'error');
+      renderCalendarList([]);
+    });
+  }
+
+  document.getElementById('addIcsHeaderBtn').addEventListener('click', function () {
+    var url = prompt('请输入 ICS 订阅地址：');
+    if (url) {
+      api.addIcs(url).then(function () {
+        app.showToast('添加成功', 'success');
+        loadCalendarSubs();
+      }).catch(function (err) {
+        app.showToast(err.message || '添加失败', 'error');
+      });
+    }
+  });
+
+  document.getElementById('addIcsBtn').addEventListener('click', function () {
+    var url = document.getElementById('icsUrlInput').value.trim();
+    if (!url) {
+      app.showToast('请输入 ICS 地址', 'error');
+      return;
+    }
+    api.addIcs(url).then(function () {
+      app.showToast('添加成功', 'success');
+      document.getElementById('icsUrlInput').value = '';
+      loadCalendarSubs();
+    }).catch(function (err) {
+      app.showToast(err.message || '添加失败', 'error');
     });
   });
 
-  // ===== 加载配置 =====
+  document.getElementById('calendarBody').addEventListener('click', function (e) {
+    var del = e.target.closest('.delete');
+    if (!del) return;
+    var id = del.getAttribute('data-id');
+    app.confirm('确定要删除这个日历订阅吗？').then(function (ok) {
+      if (!ok) return;
+      api.deleteIcs(id).then(function () {
+        app.showToast('已删除', 'success');
+        loadCalendarSubs();
+      }).catch(function (err) {
+        app.showToast(err.message || '删除失败', 'error');
+      });
+    });
+  });
+
+  // 手动添加日程
+  document.getElementById('addEventBtn').addEventListener('click', function () {
+    var title = document.getElementById('eventTitle').value.trim();
+    var date = document.getElementById('eventDate').value;
+    var startTime = document.getElementById('eventStart').value;
+    var endTime = document.getElementById('eventEnd').value;
+    var desc = document.getElementById('eventDesc').value.trim();
+
+    if (!title || !date) {
+      app.showToast('请填写标题和日期', 'error');
+      return;
+    }
+
+    var start_time = date + (startTime ? 'T' + startTime : 'T00:00');
+    var end_time = date + (endTime ? 'T' + endTime : '');
+
+    api.addCalendarEvent({
+      title: title,
+      start_time: start_time,
+      end_time: end_time || null,
+      description: desc || null
+    }).then(function () {
+      app.showToast('日程已添加', 'success');
+      document.getElementById('eventTitle').value = '';
+      document.getElementById('eventDate').value = '';
+      document.getElementById('eventStart').value = '';
+      document.getElementById('eventEnd').value = '';
+      document.getElementById('eventDesc').value = '';
+    }).catch(function (err) {
+      app.showToast(err.message || '添加失败', 'error');
+    });
+  });
+
+  // ===== 加载所有配置 =====
   function loadConfig() {
     api.getConfig().then(function (config) {
       // 天气城市
       if (config.weather_city) {
         document.getElementById('weatherCity').value = config.weather_city;
       }
+      // 热搜平台开关
+      if (config.hotsearch_platforms) {
+        var platforms = config.hotsearch_platforms;
+        document.querySelectorAll('#hotPlatforms input[type="checkbox"]').forEach(function (cb) {
+          var p = cb.getAttribute('data-platform');
+          cb.checked = platforms.indexOf(p) !== -1;
+        });
+      }
+      // RSS
+      renderRssList(config.rss_feeds || []);
+      // 日历
+      renderCalendarList(config.calendar_subs || []);
     }).catch(function () {
       // 静默失败
     });
   }
 
+  // 初始化加载
   loadConfig();
+  loadSocialAccounts();
 
 })();
 </script>

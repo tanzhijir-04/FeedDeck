@@ -19,7 +19,7 @@ var app = (function () {
   function startClock(selector) {
     var el = document.querySelector(selector);
     if (!el) return;
-    updateClock(selector);
+    updateClock(el);
     setInterval(function () { updateClock(el); }, 10000);
   }
 

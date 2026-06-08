@@ -1,43 +1,42 @@
 // Cron: fetch-social（每30分钟）
 // 获取社交媒体粉丝数据
 
-export default {
-  async scheduled(event, env) {
-    const taskName = 'fetch-social';
+export async function onRequestGet(context) {
+  const { env } = context;
+  const taskName = 'fetch-social';
 
-    try {
-      const lastRun = await env.DB.prepare(
-        'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
-      ).bind(taskName).first();
+  try {
+    const lastRun = await env.DB.prepare(
+      'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
+    ).bind(taskName).first();
 
-      if (lastRun?.last_run_at) {
-        const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-        if (elapsed < 25 * 60 * 1000) return;
-      }
-
-      const accountsStr = await env.KV.get('config:social_accounts');
-      if (!accountsStr) return;
-      const accounts = JSON.parse(accountsStr);
-      if (!accounts.length) return;
-
-      const results = await Promise.allSettled(
-        accounts.map(acc => fetchAccount(acc, env.DB))
-      );
-
-      const successCount = results.filter(r => r.status === 'fulfilled').length;
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), ?)`
-      ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
-
-    } catch {
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), 'error')`
-      ).bind(taskName).run().catch(() => {});
+    if (lastRun?.last_run_at) {
+      const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
+      if (elapsed < 25 * 60 * 1000) return;
     }
+
+    const accountsStr = await env.KV.get('config:social_accounts');
+    if (!accountsStr) return;
+    const accounts = JSON.parse(accountsStr);
+    if (!accounts.length) return;
+
+    const results = await Promise.allSettled(
+      accounts.map(acc => fetchAccount(acc, env.DB))
+    );
+
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), ?)`
+    ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
+
+  } catch {
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), 'error')`
+    ).bind(taskName).run().catch(() => {});
   }
-};
+}
 
 async function fetchAccount(account, db) {
   const { platform, accountId, name } = account;

@@ -1,43 +1,42 @@
 // Cron: sync-ics（每15分钟）
 // 同步 ICS 日历订阅
 
-export default {
-  async scheduled(event, env) {
-    const taskName = 'sync-ics';
+export async function onRequestGet(context) {
+  const { env } = context;
+  const taskName = 'sync-ics';
 
-    try {
-      const lastRun = await env.DB.prepare(
-        'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
-      ).bind(taskName).first();
+  try {
+    const lastRun = await env.DB.prepare(
+      'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
+    ).bind(taskName).first();
 
-      if (lastRun?.last_run_at) {
-        const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-        if (elapsed < 10 * 60 * 1000) return;
-      }
-
-      const subsStr = await env.KV.get('config:calendar_subs');
-      if (!subsStr) return;
-      const subs = JSON.parse(subsStr);
-      if (!subs.length) return;
-
-      const results = await Promise.allSettled(
-        subs.map(sub => syncOneIcs(sub, env.DB))
-      );
-
-      const successCount = results.filter(r => r.status === 'fulfilled').length;
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), ?)`
-      ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
-
-    } catch {
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), 'error')`
-      ).bind(taskName).run().catch(() => {});
+    if (lastRun?.last_run_at) {
+      const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
+      if (elapsed < 10 * 60 * 1000) return;
     }
+
+    const subsStr = await env.KV.get('config:calendar_subs');
+    if (!subsStr) return;
+    const subs = JSON.parse(subsStr);
+    if (!subs.length) return;
+
+    const results = await Promise.allSettled(
+      subs.map(sub => syncOneIcs(sub, env.DB))
+    );
+
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), ?)`
+    ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
+
+  } catch {
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), 'error')`
+    ).bind(taskName).run().catch(() => {});
   }
-};
+}
 
 async function syncOneIcs(sub, db) {
   const res = await fetch(sub.url, {

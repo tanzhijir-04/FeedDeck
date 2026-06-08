@@ -1,47 +1,46 @@
 // Cron: fetch-feeds（每5分钟）
 // 抓取所有 RSS/Atom 源，写入 D1
 
-export default {
-  async scheduled(event, env) {
-    const taskName = 'fetch-feeds';
+export async function onRequestGet(context) {
+  const { env } = context;
+  const taskName = 'fetch-feeds';
 
-    try {
-      // 检查上次执行时间（防止重复）
-      const lastRun = await env.DB.prepare(
-        'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
-      ).bind(taskName).first();
+  try {
+    // 检查上次执行时间（防止重复）
+    const lastRun = await env.DB.prepare(
+      'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
+    ).bind(taskName).first();
 
-      if (lastRun?.last_run_at) {
-        const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-        if (elapsed < 4 * 60 * 1000) return; // 4 分钟内不重复执行
-      }
-
-      // 获取 RSS 源列表
-      const feedsStr = await env.KV.get('config:rss_feeds');
-      if (!feedsStr) return;
-      const feeds = JSON.parse(feedsStr);
-      if (!feeds.length) return;
-
-      // 并行抓取所有源
-      const results = await Promise.allSettled(
-        feeds.map(feed => fetchFeed(feed, env.DB))
-      );
-
-      // 记录执行状态
-      const successCount = results.filter(r => r.status === 'fulfilled').length;
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), ?)`
-      ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
-
-    } catch {
-      await env.DB.prepare(
-        `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
-         VALUES (?, datetime('now'), 'error')`
-      ).bind(taskName).run().catch(() => {});
+    if (lastRun?.last_run_at) {
+      const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
+      if (elapsed < 4 * 60 * 1000) return; // 4 分钟内不重复执行
     }
+
+    // 获取 RSS 源列表
+    const feedsStr = await env.KV.get('config:rss_feeds');
+    if (!feedsStr) return;
+    const feeds = JSON.parse(feedsStr);
+    if (!feeds.length) return;
+
+    // 并行抓取所有源
+    const results = await Promise.allSettled(
+      feeds.map(feed => fetchFeed(feed, env.DB))
+    );
+
+    // 记录执行状态
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), ?)`
+    ).bind(taskName, successCount > 0 ? 'success' : 'error').run();
+
+  } catch {
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
+       VALUES (?, datetime('now'), 'error')`
+    ).bind(taskName).run().catch(() => {});
   }
-};
+}
 
 async function fetchFeed(feed, db) {
   const controller = new AbortController();
@@ -80,7 +79,7 @@ async function fetchFeed(feed, db) {
     ).bind(feed.key).run();
 
   } catch {
-    clearTimeout(timeout);
+    // clearTimeout already called in try block
   }
 }
 
