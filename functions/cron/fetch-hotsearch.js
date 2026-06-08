@@ -36,7 +36,22 @@ export async function onRequestGet(context) {
       baidu: fetchBaidu,
       toutiao: fetchToutiao,
       github: fetchGithub,
-      reddit: fetchReddit
+      reddit: fetchReddit,
+      cls: fetchCls,
+      '36kr': fetch36kr,
+      ithome: fetchIthome,
+      juejin: fetchJuejin,
+      v2ex: fetchV2ex,
+      hackernews: fetchHackernews,
+      zhihudaily: fetchZhihudaily,
+      thepaper: fetchThepaper,
+      qqnews: fetchQqnews,
+      ifeng: fetchIfeng,
+      netease: fetchNetease,
+      hupu: fetchHupu,
+      douban: fetchDouban,
+      steam: fetchSteam,
+      sspai: fetchSspai
     };
 
     const results = await Promise.allSettled(
@@ -352,5 +367,342 @@ async function fetchReddit(db) {
     }));
 
     return await batchInsert(db, 'reddit', items);
+  } catch { return 0; }
+}
+
+// ===== 以下为 NewsNow 风格新增平台 =====
+
+// --- 财联社 CLS ---
+async function fetchCls(db) {
+  try {
+    const res = await fetch('https://www.cls.cn/api/sw?app=CailianpressWeb&os=web&sv=8.4.6', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data?.roll_data || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || item.content || '',
+      url: item.shareurl || '',
+      heat: item.read_count?.toString() || ''
+    }));
+    return await batchInsert(db, 'cls', items);
+  } catch { return 0; }
+}
+
+// --- 36氪 ---
+async function fetch36kr(db) {
+  try {
+    const res = await fetch('https://gateway.36kr.com/api/mis/nav/home/nav/rank/hot', {
+      method: 'POST',
+      headers: { 'User-Agent': UA, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partner_id: 'wap', param: { siteId: 1, platformId: 2 } })
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data?.hotRankList || json.data?.itemList || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.templateMaterial?.widgetTitle || item.title || '',
+      url: item.itemId ? 'https://36kr.com/p/' + item.itemId : '',
+      heat: ''
+    }));
+    return await batchInsert(db, '36kr', items);
+  } catch { return 0; }
+}
+
+// --- IT之家 ---
+async function fetchIthome(db) {
+  try {
+    const res = await fetch('https://m.ithome.com/api/news/newslistpageget?categoryid=0&dt=0&startid=0&pagesize=20', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.Result || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.url || item.link || '',
+      heat: item.commentcount?.toString() || ''
+    }));
+    return await batchInsert(db, 'ithome', items);
+  } catch { return 0; }
+}
+
+// --- 掘金 ---
+async function fetchJuejin(db) {
+  try {
+    const res = await fetch('https://api.juejin.cn/content_api/v1/content/article_rank?category_id=1&type=hot&count=20&from=0', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.content?.title || '',
+      url: item.content?.content_id ? 'https://juejin.cn/post/' + item.content.content_id : '',
+      heat: item.content_counter?.hot_rank?.toString() || ''
+    }));
+    return await batchInsert(db, 'juejin', items);
+  } catch { return 0; }
+}
+
+// --- V2EX ---
+async function fetchV2ex(db) {
+  try {
+    const res = await fetch('https://www.v2ex.com/api/topics/hot.json', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    if (!Array.isArray(json)) return 0;
+    const items = json.slice(0, 20).map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.url || '',
+      heat: item.replies?.toString() || ''
+    }));
+    return await batchInsert(db, 'v2ex', items);
+  } catch { return 0; }
+}
+
+// --- Hacker News ---
+async function fetchHackernews(db) {
+  try {
+    const res = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const ids = await res.json();
+    if (!Array.isArray(ids)) return 0;
+    const top20 = ids.slice(0, 20);
+    const stories = await Promise.all(
+      top20.map(id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { headers: { 'User-Agent': UA } }).then(r => r.json()).catch(() => null))
+    );
+    const items = stories.filter(Boolean).map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.url || `https://news.ycombinator.com/item?id=${item.id}`,
+      heat: item.score?.toString() || ''
+    }));
+    return await batchInsert(db, 'hackernews', items);
+  } catch { return 0; }
+}
+
+// --- 知乎日报 ---
+async function fetchZhihudaily(db) {
+  try {
+    const res = await fetch('https://news-at.zhihu.com/api/4/news/latest', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.stories || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.share_url || `https://daily.zhihu.com/story/${item.id}`,
+      heat: ''
+    }));
+    return await batchInsert(db, 'zhihudaily', items);
+  } catch { return 0; }
+}
+
+// --- 澎湃新闻 ---
+async function fetchThepaper(db) {
+  try {
+    const res = await fetch('https://cache.thepaper.cn/contentapi/wwwIndex/rightSidebar', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data?.hotNews || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.name || item.title || '',
+      url: item.contId ? 'https://www.thepaper.cn/newsDetail_forward_' + item.contId : '',
+      heat: item.praiseTimes?.toString() || ''
+    }));
+    return await batchInsert(db, 'thepaper', items);
+  } catch { return 0; }
+}
+
+// --- 腾讯新闻 ---
+async function fetchQqnews(db) {
+  try {
+    const res = await fetch('https://i.news.qq.com/trpc.qqnews_web.kv_srv.kv_srv_http/list?sub_srv_id=24hours&srv_id=pc&offset=0&limit=20&strategy=1&ext=%7B%22pool%22%3A%5B%22top%22%5D%2C%22Is498%22%3Atrue%7D', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data?.list || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.url || '',
+      heat: item.read_count?.toString() || ''
+    }));
+    return await batchInsert(db, 'qqnews', items);
+  } catch { return 0; }
+}
+
+// --- 凤凰新闻 ---
+async function fetchIfeng(db) {
+  try {
+    const res = await fetch('https://news.ifeng.com/shanklist/toutiao/pc_0490201010/1-1-20-0.html', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data?.list || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.url || '',
+      heat: item.comments?.toString() || ''
+    }));
+    return await batchInsert(db, 'ifeng', items);
+  } catch { return 0; }
+}
+
+// --- 网易新闻 ---
+async function fetchNetease(db) {
+  try {
+    const res = await fetch('https://m.163.com/fe/api/hot/news/flow?size=20', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data?.list || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.skipURL || item.url || '',
+      heat: item.commentCount?.toString() || ''
+    }));
+    return await batchInsert(db, 'netease', items);
+  } catch { return 0; }
+}
+
+// --- 虎扑 ---
+async function fetchHupu(db) {
+  try {
+    const res = await fetch('https://bbs.hupu.com/all-gambia', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const text = await res.text();
+    const items = [];
+    const re = /class="p-title"[^>]*>[\s\S]*?<a[^>]*href="([^"]*)"[^>]*>([^<]+)<\/a>/g;
+    let m;
+    while ((m = re.exec(text)) && items.length < 20) {
+      const title = m[2].trim();
+      if (!title) continue;
+      items.push({ rank: items.length + 1, title, url: m[1].startsWith('http') ? m[1] : 'https://bbs.hupu.com' + m[1], heat: '' });
+    }
+    return await batchInsert(db, 'hupu', items);
+  } catch { return 0; }
+}
+
+// --- 豆瓣 ---
+async function fetchDouban(db) {
+  try {
+    const res = await fetch('https://movie.douban.com/j/search_subjects?type=movie&tag=%E7%83%AD%E9%97%A8&page_limit=20&page_start=0', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.subjects || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.url || '',
+      heat: item.rate || ''
+    }));
+    return await batchInsert(db, 'douban', items);
+  } catch { return 0; }
+}
+
+// --- Steam ---
+async function fetchSteam(db) {
+  try {
+    const res = await fetch('https://store.steampowered.com/api/featuredcategories', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const specials = json?.specials?.items || [];
+    const list = specials.slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.name || '',
+      url: item.id ? 'https://store.steampowered.com/app/' + item.id : '',
+      heat: item.discount_percent ? '-' + item.discount_percent + '%' : ''
+    }));
+    return await batchInsert(db, 'steam', items);
+  } catch { return 0; }
+}
+
+// --- 少数派 SSPAI ---
+async function fetchSspai(db) {
+  try {
+    const res = await fetch('https://sspai.com/api/v1/articles?offset=0&limit=20&type=recommend_to_home&sort=recommend_count_at_home', {
+      headers: { 'User-Agent': UA }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const list = (json.data || []).slice(0, 20);
+    if (!list.length) return 0;
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.title || '',
+      url: item.slug ? 'https://sspai.com/post/' + item.slug : '',
+      heat: item.like_count?.toString() || ''
+    }));
+    return await batchInsert(db, 'sspai', items);
+  } catch { return 0; }
+}
+
+// --- 今日头条热榜 (toutiao 已有，此为备用热搜接口) ---
+// --- 微博热搜备用：使用 newsnow 的移动端接口 ---
+async function fetchWeiboMobile(db) {
+  try {
+    const res = await fetch('https://m.weibo.cn/api/container/getIndex?containerid=106003type%3D25%26t%3D3%26disable_hot%3D1%26filter_type%3Drealtimehot', {
+      headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15' }
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const cards = json.data?.cards || [];
+    const items = [];
+    for (const card of cards) {
+      const group = card.card_group || [];
+      for (const item of group) {
+        if (items.length >= 20) break;
+        const desc = item.desc || '';
+        if (!desc) continue;
+        items.push({
+          rank: items.length + 1,
+          title: desc,
+          url: item.scheme || '',
+          heat: item.desc_extr || ''
+        });
+      }
+      if (items.length >= 20) break;
+    }
+    return await batchInsert(db, 'weibo', items);
   } catch { return 0; }
 }

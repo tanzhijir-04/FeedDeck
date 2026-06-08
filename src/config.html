@@ -418,102 +418,33 @@
       </header>
 
       <div class="panel" id="hotPlatforms">
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">
-              <span class="material-symbols-outlined">whatshot</span>
-            </div>
-            <div>
-              <div class="toggle-label">微博热搜</div>
-              <div class="toggle-desc">实时热门话题，Top 20</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" checked data-platform="weibo"/><span class="toggle-track"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
-              <span class="material-symbols-outlined">psychology</span>
-            </div>
-            <div>
-              <div class="toggle-label">知乎热榜</div>
-              <div class="toggle-desc">优质问答社区热门话题，Top 15</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" checked data-platform="zhihu"/><span class="toggle-track"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(255,255,255,0.06);color:var(--text);">
-              <span class="material-symbols-outlined">play_circle</span>
-            </div>
-            <div>
-              <div class="toggle-label">抖音热搜</div>
-              <div class="toggle-desc">短视频平台热门内容，Top 20</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" checked data-platform="douyin"/><span class="toggle-track"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
-              <span class="material-symbols-outlined">search</span>
-            </div>
-            <div>
-              <div class="toggle-label">百度热搜</div>
-              <div class="toggle-desc">搜索引擎热点趋势，Top 15</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" data-platform="baidu"/><span class="toggle-track"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">
-              <span class="material-symbols-outlined">newsmode</span>
-            </div>
-            <div>
-              <div class="toggle-label">今日头条</div>
-              <div class="toggle-desc">新闻资讯热点，Top 15</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" data-platform="toutiao"/><span class="toggle-track"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
-              <span class="material-symbols-outlined">live_tv</span>
-            </div>
-            <div>
-              <div class="toggle-label">B站热搜</div>
-              <div class="toggle-desc">视频创作者社区热门，Top 15</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" checked data-platform="bilibili"/><span class="toggle-track"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(255,255,255,0.06);color:var(--text);">
-              <span class="material-symbols-outlined">rocket_launch</span>
-            </div>
-            <div>
-              <div class="toggle-label">GitHub Trending</div>
-              <div class="toggle-desc">开源项目热度排行，每日更新</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" checked data-platform="github"/><span class="toggle-track"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;">
-              <span class="material-symbols-outlined">forum</span>
-            </div>
-            <div>
-              <div class="toggle-label">Reddit</div>
-              <div class="toggle-desc">全球社区讨论热点，Top 15</div>
-            </div>
-          </div>
-          <label class="toggle"><input type="checkbox" data-platform="reddit"/><span class="toggle-track"></span></label>
-        </div>
+        <!-- 社交/搜索 -->
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;"><span class="material-symbols-outlined">whatshot</span></div><div><div class="toggle-label">微博热搜</div><div class="toggle-desc">实时热门话题</div></div></div><label class="toggle"><input type="checkbox" checked data-platform="weibo"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">psychology</span></div><div><div class="toggle-label">知乎热榜</div><div class="toggle-desc">优质问答社区热门</div></div></div><label class="toggle"><input type="checkbox" checked data-platform="zhihu"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(255,255,255,0.06);color:var(--text);"><span class="material-symbols-outlined">play_circle</span></div><div><div class="toggle-label">抖音热搜</div><div class="toggle-desc">短视频平台热门内容</div></div></div><label class="toggle"><input type="checkbox" checked data-platform="douyin"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">search</span></div><div><div class="toggle-label">百度热搜</div><div class="toggle-desc">搜索引擎热点趋势</div></div></div><label class="toggle"><input type="checkbox" data-platform="baidu"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">live_tv</span></div><div><div class="toggle-label">B站热搜</div><div class="toggle-desc">视频创作者社区热门</div></div></div><label class="toggle"><input type="checkbox" checked data-platform="bilibili"/><span class="toggle-track"></span></label></div>
+        <!-- 新闻资讯 -->
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;"><span class="material-symbols-outlined">newsmode</span></div><div><div class="toggle-label">今日头条</div><div class="toggle-desc">新闻资讯热点</div></div></div><label class="toggle"><input type="checkbox" data-platform="toutiao"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;"><span class="material-symbols-outlined">bolt</span></div><div><div class="toggle-label">财联社</div><div class="toggle-desc">财经快讯实时推送</div></div></div><label class="toggle"><input type="checkbox" data-platform="cls"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">newspaper</span></div><div><div class="toggle-label">澎湃新闻</div><div class="toggle-desc">深度新闻报道</div></div></div><label class="toggle"><input type="checkbox" data-platform="thepaper"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">news</span></div><div><div class="toggle-label">腾讯新闻</div><div class="toggle-desc">24小时新闻热榜</div></div></div><label class="toggle"><input type="checkbox" data-platform="qqnews"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;"><span class="material-symbols-outlined">public</span></div><div><div class="toggle-label">凤凰新闻</div><div class="toggle-desc">头条资讯热榜</div></div></div><label class="toggle"><input type="checkbox" data-platform="ifeng"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;"><span class="material-symbols-outlined">article</span></div><div><div class="toggle-label">网易新闻</div><div class="toggle-desc">热门新闻资讯</div></div></div><label class="toggle"><input type="checkbox" data-platform="netease"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">auto_stories</span></div><div><div class="toggle-label">知乎日报</div><div class="toggle-desc">每日精选好文</div></div></div><label class="toggle"><input type="checkbox" data-platform="zhihudaily"/><span class="toggle-track"></span></label></div>
+        <!-- 科技/开发 -->
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">rocket_launch</span></div><div><div class="toggle-label">GitHub Trending</div><div class="toggle-desc">开源项目热度排行</div></div></div><label class="toggle"><input type="checkbox" checked data-platform="github"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">code</span></div><div><div class="toggle-label">掘金</div><div class="toggle-desc">开发者技术社区热榜</div></div></div><label class="toggle"><input type="checkbox" data-platform="juejin"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;"><span class="material-symbols-outlined">terminal</span></div><div><div class="toggle-label">V2EX</div><div class="toggle-desc">创意工作者社区热门</div></div></div><label class="toggle"><input type="checkbox" data-platform="v2ex"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;"><span class="material-symbols-outlined">computer</span></div><div><div class="toggle-label">IT之家</div><div class="toggle-desc">科技资讯排行榜</div></div></div><label class="toggle"><input type="checkbox" data-platform="ithome"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;"><span class="material-symbols-outlined">forYou</span></div><div><div class="toggle-label">36氪</div><div class="toggle-desc">创投科技热门资讯</div></div></div><label class="toggle"><input type="checkbox" data-platform="36kr"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;"><span class="material-symbols-outlined">hardware</span></div><div><div class="toggle-label">少数派</div><div class="toggle-desc">效率工具与数字生活</div></div></div><label class="toggle"><input type="checkbox" data-platform="sspai"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;"><span class="material-symbols-outlined">forum</span></div><div><div class="toggle-label">Hacker News</div><div class="toggle-desc">硅谷科技社区热榜</div></div></div><label class="toggle"><input type="checkbox" data-platform="hackernews"/><span class="toggle-track"></span></label></div>
+        <!-- 娱乐/生活 -->
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;"><span class="material-symbols-outlined">sports_basketball</span></div><div><div class="toggle-label">虎扑</div><div class="toggle-desc">体育社区热门帖子</div></div></div><label class="toggle"><input type="checkbox" data-platform="hupu"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;"><span class="material-symbols-outlined">movie</span></div><div><div class="toggle-label">豆瓣</div><div class="toggle-desc">热门电影排行</div></div></div><label class="toggle"><input type="checkbox" data-platform="douban"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;"><span class="material-symbols-outlined">sports_esports</span></div><div><div class="toggle-label">Steam</div><div class="toggle-desc">热门游戏特惠推荐</div></div></div><label class="toggle"><input type="checkbox" data-platform="steam"/><span class="toggle-track"></span></label></div>
+        <div class="toggle-row"><div class="toggle-info"><div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;"><span class="material-symbols-outlined">forum</span></div><div><div class="toggle-label">Reddit</div><div class="toggle-desc">全球社区讨论热点</div></div></div><label class="toggle"><input type="checkbox" data-platform="reddit"/><span class="toggle-track"></span></label></div>
       </div>
     </div>
 

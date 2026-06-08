@@ -599,12 +599,7 @@
         <div class="card-title">热搜榜单</div>
         <div class="card-subtitle">实时热点追踪</div>
       </div>
-      <div class="tabs" id="hotTabs">
-        <button class="tab active" data-platform="weibo">微博</button>
-        <button class="tab" data-platform="zhihu">知乎</button>
-        <button class="tab" data-platform="bilibili">B站</button>
-        <button class="tab" data-platform="douyin">抖音</button>
-      </div>
+      <div class="tabs" id="hotTabs"></div>
     </div>
     <div class="card-body">
       <ul class="hot-list" id="hotList"></ul>
@@ -791,6 +786,27 @@
   var currentPlatform = 'weibo';
   var currentState = 'S0';
   var currentData = null;
+
+  // ===== 热搜平台标签映射 =====
+  var hotPlatformLabels = {
+    weibo: '微博', zhihu: '知乎', bilibili: 'B站', douyin: '抖音',
+    baidu: '百度', toutiao: '头条', github: 'GitHub', reddit: 'Reddit',
+    cls: '财联社', '36kr': '36氪', ithome: 'IT之家', juejin: '掘金',
+    v2ex: 'V2EX', hackernews: 'HN', zhihudaily: '知乎日报', thepaper: '澎湃',
+    qqnews: '腾讯', ifeng: '凤凰', netease: '网易', hupu: '虎扑',
+    douban: '豆瓣', steam: 'Steam', sspai: '少数派'
+  };
+
+  function renderHotTabs(platforms) {
+    var tabsEl = document.getElementById('hotTabs');
+    var keys = Object.keys(platforms);
+    if (!keys.length) { tabsEl.innerHTML = ''; return; }
+    tabsEl.innerHTML = keys.map(function (p) {
+      var label = hotPlatformLabels[p] || p;
+      return '<button class="tab' + (p === currentPlatform ? ' active' : '') + '" data-platform="' + p + '">' + label + '</button>';
+    }).join('');
+    if (keys.indexOf(currentPlatform) === -1) currentPlatform = keys[0];
+  }
 
   // ===== 工具函数 =====
   function getTodayEvents(calendar) {
@@ -1317,6 +1333,7 @@
   function renderAll(data) {
     dashboardData = data;
 
+    renderHotTabs(data.hotsearch && data.hotsearch.platforms || {});
     renderHotList(currentPlatform);
     renderNews(data.feeds && data.feeds.items);
     renderTodos(data.todos && data.todos.items);
