@@ -340,10 +340,10 @@
         <div class="panel-title">天气设置</div>
         <div class="form-group">
           <label class="form-label">城市</label>
-          <input class="form-input" type="text" value="北京" placeholder="输入城市名称" style="max-width:320px;"/>
+          <input class="form-input" type="text" id="weatherCity" value="北京" placeholder="输入城市名称" style="max-width:320px;"/>
           <div class="form-hint">使用 Open-Meteo 免费 API，无需 API Key</div>
         </div>
-        <button class="btn btn-primary" onclick="app.showToast('设置已保存','success')">
+        <button class="btn btn-primary" id="saveWeatherBtn">
           <span class="material-symbols-outlined">save</span>
           保存设置
         </button>
@@ -945,6 +945,35 @@
 
   // 初始化加载
   loadSocialAccounts();
+
+  // ===== 天气设置 =====
+  document.getElementById('saveWeatherBtn').addEventListener('click', function () {
+    var city = document.getElementById('weatherCity').value.trim();
+    if (!city) {
+      app.showToast('请输入城市名称', 'error');
+      return;
+    }
+
+    api.updateConfig({ weather_city: city }).then(function () {
+      app.showToast('天气设置已保存', 'success');
+    }).catch(function () {
+      app.showToast('保存失败', 'error');
+    });
+  });
+
+  // ===== 加载配置 =====
+  function loadConfig() {
+    api.getConfig().then(function (config) {
+      // 天气城市
+      if (config.weather_city) {
+        document.getElementById('weatherCity').value = config.weather_city;
+      }
+    }).catch(function () {
+      // 静默失败
+    });
+  }
+
+  loadConfig();
 
 })();
 </script>

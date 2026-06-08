@@ -44,8 +44,8 @@ export async function onRequestPost(context) {
       'INSERT INTO sessions (token, expires_at) VALUES (?, ?)'
     ).bind(token, expiresAt).run();
 
-    // 设置 HttpOnly cookie
-    const cookie = `fd_session=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${30 * 24 * 60 * 60}`;
+    // 设置 HttpOnly cookie（开发环境可去掉 Secure）
+    const cookie = `fd_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${30 * 24 * 60 * 60}`;
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

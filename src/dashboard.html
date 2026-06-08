@@ -442,6 +442,11 @@
 (function () {
   'use strict';
 
+  // ===== 登录检查 =====
+  api.checkAuth().catch(function () {
+    window.location.href = '/';
+  });
+
   // ===== 日期（显示在天气卡片） =====
   document.getElementById('scheduleDate').textContent = app.formatDate().split(' ')[0];
 
