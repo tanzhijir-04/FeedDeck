@@ -1,5 +1,8 @@
-﻿// Cron: fetch-hotsearch（每5分钟）
+// Cron: fetch-hotsearch（每5分钟）
 // 抓取各平台热搜数据
+// API 方案参考：https://github.com/ourongxing/newsnow
+
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 
 export async function onRequestGet(context) {
   const { env } = context;
@@ -63,184 +66,257 @@ export async function onRequestGet(context) {
   return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
-// --- 各平台抓取器 ---
+// --- 辅助：批量写入 + 清理旧数据 ---
+
+async function batchInsert(db, platform, items) {
+  if (!items.length) return 0;
+  const stmts = items.map(item =>
+    db.prepare(
+      `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
+       VALUES (?, ?, ?, ?, ?)`
+    ).bind(platform, item.rank, item.title, item.url || '', item.heat || '')
+  );
+  await db.batch(stmts);
+  await db.prepare(
+    `DELETE FROM hotsearch_items WHERE platform = ? AND fetched_at < datetime('now', '-7 days')`
+  ).bind(platform).run();
+  return stmts.length;
+}
+
+// --- 微博 ---
+// 主接口：weibo.com AJAX API（无需 cookie）
+// 备用：s.weibo.com HTML 抓取（需 cookie，更稳定但脆弱）
 
 async function fetchWeibo(db) {
   try {
     const res = await fetch('https://weibo.com/ajax/side/hotSearch', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+      headers: { 'User-Agent': UA }
     });
     if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data?.realtime || []).slice(0, 20);
+    if (!list.length) return 0;
 
-    const stmts = list.map((item, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('weibo', i + 1, item.note || item.word, '', item.num?.toString() || '')
-    );
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.note || item.word || '',
+      url: item.word ? 'https://s.weibo.com/weibo?q=' + encodeURIComponent(item.word) : '',
+      heat: item.num?.toString() || ''
+    }));
 
-    if (stmts.length) await db.batch(stmts);
-
-    // 清理 7 天前数据
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'weibo' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    return await batchInsert(db, 'weibo', items);
   } catch { return 0; }
 }
 
+// --- 知乎 ---
+// 使用 -web 端点，字段路径更稳定（参考 newsnow）
+
 async function fetchZhihu(db) {
   try {
-    const res = await fetch('https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=20', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+    const res = await fetch('https://www.zhihu.com/api/v3/feed/topstory/hot-list-web?limit=20&desktop=true', {
+      headers: { 'User-Agent': UA }
     });
     if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data || []).slice(0, 20);
+    if (!list.length) return 0;
 
-    const stmts = list.map((item, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('zhihu', i + 1, item.target?.title || '', '', item.detail_text || '')
-    );
+    const items = list.map((item, i) => {
+      const target = item.target || {};
+      const titleArea = target.title_area || {};
+      const metricsArea = target.metrics_area || {};
+      const link = target.link || {};
+      return {
+        rank: i + 1,
+        title: titleArea.text || target.title || '',
+        url: link.url || '',
+        heat: metricsArea.text || ''
+      };
+    });
 
-    if (stmts.length) await db.batch(stmts);
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'zhihu' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    return await batchInsert(db, 'zhihu', items);
   } catch { return 0; }
 }
+
+// --- B站 ---
+// 使用 hotword 端点，返回 show_name（显示名）+ keyword（搜索词）（参考 newsnow）
 
 async function fetchBilibili(db) {
   try {
-    const res = await fetch('https://api.bilibili.com/x/web-interface/search/square?limit=20', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+    const res = await fetch('https://s.search.bilibili.com/main/hotword?limit=30', {
+      headers: { 'User-Agent': UA }
     });
     if (!res.ok) return 0;
     const json = await res.json();
-    const list = (json.data?.trending?.list || []).slice(0, 20);
+    const list = (json.top_list || []).slice(0, 20);
+    if (!list.length) return 0;
 
-    const stmts = list.map((item, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('bilibili', i + 1, item.keyword || '', '', item.heat_score?.toString() || '')
-    );
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.show_name || item.keyword || '',
+      url: item.keyword ? 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(item.keyword) : '',
+      heat: item.heat_score ? String(item.heat_score) : ''
+    }));
 
-    if (stmts.length) await db.batch(stmts);
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'bilibili' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    return await batchInsert(db, 'bilibili', items);
   } catch { return 0; }
 }
 
+// --- 抖音 ---
+// 需要先获取 cookie（参考 newsnow），否则 API 返回空
+
 async function fetchDouyin(db) {
-  // 抖音热搜需要特殊处理，这里用备用接口
   try {
-    const res = await fetch('https://www.douyin.com/aweme/v1/web/hot/search/list/', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+    // 第一步：获取抖音 cookie
+    const cookieRes = await fetch('https://login.douyin.com/', {
+      headers: { 'User-Agent': UA },
+      redirect: 'manual'
     });
+    const setCookies = cookieRes.headers.getSetCookie?.() || [];
+    const cookie = setCookies.map(c => c.split(';')[0]).join('; ');
+
+    // 第二步：带 cookie 请求热搜
+    const res = await fetch(
+      'https://www.douyin.com/aweme/v1/web/hot/search/list/?device_platform=webapp&aid=6383&channel=channel_pc_web&detail_list=1',
+      {
+        headers: {
+          'User-Agent': UA,
+          'Cookie': cookie
+        }
+      }
+    );
     if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data?.word_list || []).slice(0, 20);
+    if (!list.length) return 0;
 
-    const stmts = list.map((item, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('douyin', i + 1, item.word || '', '', item.hot_value?.toString() || '')
-    );
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.word || '',
+      url: item.sentence_id ? 'https://www.douyin.com/hot/' + item.sentence_id : '',
+      heat: item.hot_value?.toString() || ''
+    }));
 
-    if (stmts.length) await db.batch(stmts);
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'douyin' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    return await batchInsert(db, 'douyin', items);
   } catch { return 0; }
 }
+
+// --- 百度 ---
+// 从 SSR 嵌入的 <!--s-data:...--> 提取结构化 JSON（参考 newsnow）
+// 比 HTML class 正则更稳定，且自带 URL 和置顶标记
 
 async function fetchBaidu(db) {
   try {
     const res = await fetch('https://top.baidu.com/board?tab=realtime', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+      headers: { 'User-Agent': UA }
     });
     if (!res.ok) return 0;
     const text = await res.text();
 
-    // 简易提取热搜标题
-    const titles = [];
-    const re = /class="c-single-text-ellipsis"[^>]*>([^<]+)</g;
-    let m;
-    while ((m = re.exec(text)) && titles.length < 20) {
-      titles.push(m[1].trim());
-    }
+    // 提取嵌入的 SSR JSON
+    const match = text.match(/<!--s-data:(.*?)-->/s);
+    if (!match) return 0;
+    const data = JSON.parse(match[1]);
+    const content = data?.cards?.[0]?.content || [];
+    if (!content.length) return 0;
 
-    const stmts = titles.map((title, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('baidu', i + 1, title, '', '')
-    );
+    // 过滤置顶广告，取前 20 条
+    const filtered = content.filter(item => !item.isTop).slice(0, 20);
 
-    if (stmts.length) await db.batch(stmts);
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'baidu' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    const items = filtered.map((item, i) => ({
+      rank: i + 1,
+      title: item.word || '',
+      url: item.rawUrl ? 'https://' + item.rawUrl : '',
+      heat: item.hotScore ? String(item.hotScore) : ''
+    }));
+
+    return await batchInsert(db, 'baidu', items);
   } catch { return 0; }
 }
+
+// --- 今日头条 ---
+// 同一 API，补充 URL 构造
 
 async function fetchToutiao(db) {
   try {
     const res = await fetch('https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+      headers: { 'User-Agent': UA }
     });
     if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data || []).slice(0, 20);
+    if (!list.length) return 0;
 
-    const stmts = list.map((item, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('toutiao', i + 1, item.Title || '', '', item.HotValue?.toString() || '')
-    );
+    const items = list.map((item, i) => ({
+      rank: i + 1,
+      title: item.Title || '',
+      url: item.ClusterIdStr ? 'https://www.toutiao.com/trending/' + item.ClusterIdStr + '/' : '',
+      heat: item.HotValue?.toString() || ''
+    }));
 
-    if (stmts.length) await db.batch(stmts);
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'toutiao' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    return await batchInsert(db, 'toutiao', items);
   } catch { return 0; }
 }
+
+// --- GitHub Trending ---
+// 抓取 github.com/trending 页面（真正的热门项目，而非 Search API 的新项目）
 
 async function fetchGithub(db) {
   try {
-    const res = await fetch('https://api.github.com/search/repositories?q=created:>=' + getDateNDaysAgo(1) + '&sort=stars&order=desc&per_page=15', {
-      headers: { 'User-Agent': 'FeedDeck/1.0', 'Accept': 'application/vnd.github.v3+json' }
+    const res = await fetch('https://github.com/trending', {
+      headers: { 'User-Agent': UA }
     });
     if (!res.ok) return 0;
-    const json = await res.json();
+    const text = await res.text();
 
-    const stmts = (json.items || []).map((item, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('github', i + 1, item.full_name, item.html_url, item.stargazers_count?.toString() + ' stars')
-    );
+    // 用正则从 HTML 中提取 trending 仓库
+    // 每个仓库在 <article> 标签中，<h2> 里有 <a href="/owner/repo">
+    const items = [];
+    const repoRe = /href="\/([^"]+)"[^>]*>\s*\1\s*<\/a>/g;
+    const articleRe = /<article class="Box-row">([\s\S]*?)<\/article>/g;
+    let articleMatch;
 
-    if (stmts.length) await db.batch(stmts);
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'github' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    while ((articleMatch = articleRe.exec(text)) && items.length < 15) {
+      const block = articleMatch[1];
+
+      // 提取仓库名（/owner/repo 格式）
+      const repoMatch = block.match(/href="\/([^"]+)"[^>]*>\s*<[^>]+>\s*<[^>]+>\s*([^<]+)/);
+      if (!repoMatch) continue;
+      const repoPath = repoMatch[1].trim();
+      const repoName = repoMatch[2].trim() || repoPath;
+
+      // 提取 star 数
+      const starMatch = block.match(/href="\/[^"]+\/stargazers"[^>]*>\s*(?:<[^>]+>)*\s*([\d,]+)/);
+      const stars = starMatch ? starMatch[1].replace(/,/g, '') : '';
+
+      items.push({
+        rank: items.length + 1,
+        title: repoPath,
+        url: 'https://github.com/' + repoPath,
+        heat: stars ? stars + ' stars' : ''
+      });
+    }
+
+    // 如果 article 正则没匹配到，用更宽松的方式
+    if (!items.length) {
+      const linkRe = /class="[^"]*repo[^"]*"[^>]*href="\/([^"]+)"/g;
+      let m;
+      while ((m = linkRe.exec(text)) && items.length < 15) {
+        items.push({
+          rank: items.length + 1,
+          title: m[1],
+          url: 'https://github.com/' + m[1],
+          heat: ''
+        });
+      }
+    }
+
+    return await batchInsert(db, 'github', items);
   } catch { return 0; }
 }
+
+// --- Reddit ---
+// 保持原有实现，newsnow 未覆盖此平台
 
 async function fetchReddit(db) {
   try {
@@ -250,26 +326,15 @@ async function fetchReddit(db) {
     if (!res.ok) return 0;
     const json = await res.json();
     const posts = (json.data?.children || []).slice(0, 15);
+    if (!posts.length) return 0;
 
-    const stmts = posts.map((post, i) =>
-      db.prepare(
-        `INSERT INTO hotsearch_items (platform, rank, title, url, heat)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind('reddit', i + 1, post.data?.title || '', 'https://reddit.com' + (post.data?.permalink || ''), post.data?.score?.toString() || '')
-    );
+    const items = posts.map((post, i) => ({
+      rank: i + 1,
+      title: post.data?.title || '',
+      url: post.data?.permalink ? 'https://reddit.com' + post.data.permalink : '',
+      heat: post.data?.score?.toString() || ''
+    }));
 
-    if (stmts.length) await db.batch(stmts);
-    await db.prepare(
-      `DELETE FROM hotsearch_items WHERE platform = 'reddit' AND fetched_at < datetime('now', '-7 days')`
-    ).run();
-    return stmts.length;
+    return await batchInsert(db, 'reddit', items);
   } catch { return 0; }
-}
-
-function getDateNDaysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().split('T')[0];
-
-
 }
