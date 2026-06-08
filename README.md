@@ -148,36 +148,32 @@ CREATE TABLE IF NOT EXISTS fetch_log (task_name TEXT PRIMARY KEY, last_run_at TE
 
 ### 第六步：配置定时任务（Cron Triggers）
 
-Cloudflare Pages 的定时任务需要在 Dashboard 中手动配置，**不支持**在 `wrangler.toml` 中设置。
+Cloudflare **Pages 没有定时器功能**，需要创建一个独立的 Worker 来触发定时任务。
 
-**配置步骤：**
+**步骤 6.1：创建 Worker**
 
-1. 进入你的 Pages 项目
-2. 点击顶部的 **设置** 标签页
-3. 在左侧菜单中点击 **函数**
-4. 向下滚动页面，找到 **定时器**（Cron Triggers）区域
-5. 点击 **添加** 按钮
-6. 在弹出的表单中：
-   - **路径**：输入函数路径（如 `/cron/fetch-feeds`）
-   - **调度**：输入 cron 表达式（如 `*/5 * * * *`）
-7. 点击 **添加** 保存
-8. 重复步骤 5-7，添加所有触发器
+1. 在 Cloudflare Dashboard 左侧菜单点击 **Workers & Pages**
+2. 点击 **创建应用程序** → **Worker** tab
+3. 点击 **创建 Worker**
+4. Worker 名称输入：`feeddeck-cron`
+5. 点击 **部署**
 
-**需要添加的触发器：**
+**步骤 6.2：配置 Worker 代码**
 
-| 路径 | 调度（Cron 表达式） | 说明 |
-|------|---------------------|------|
-| `/cron/fetch-feeds` | `*/5 * * * *` | RSS 聚合（每 5 分钟） |
-| `/cron/fetch-hotsearch` | `*/5 * * * *` | 热搜抓取（每 5 分钟） |
-| `/cron/sync-ics` | `*/15 * * * *` | ICS 日历同步（每 15 分钟） |
-| `/cron/fetch-weather` | `*/30 * * * *` | 天气查询（每 30 分钟） |
-| `/cron/fetch-social` | `*/30 * * * *` | 社交媒体数据（每 30 分钟） |
-| `/cron/cleanup` | `0 0 * * *` | 过期数据清理（每天 0 点） |
+1. 部署完成后，点击 **编辑代码**
+2. 删除默认代码，粘贴 `worker/index.js` 的内容
+3. 点击 **保存并部署**
 
-> ⚠️ **免费套餐限制**：最多 3 个定时触发器。建议方案：
-> - 只添加 1 个触发器：路径留空，调度 `*/5 * * * *`
-> - 这样会触发所有 `/cron/*` 函数，由代码内部判断是否执行
-> - 或者把所有任务合并到 `*/5` 的频率，只用 1 个触发器
+**步骤 6.3：配置定时触发器**
+
+1. 回到 Worker 详情页，点击 **设置** 标签页
+2. 在左侧菜单点击 **触发器**
+3. 向下滚动找到 **Schedules** 区域
+4. 点击 **添加** 按钮
+5. Cron 表达式输入：`*/5 * * * *`
+6. 点击 **添加** 保存
+
+> ⚠️ **注意**：需要修改 `worker/index.js` 中的 `PAGES_URL` 为你的实际 Pages 地址
 
 ### 第七步：设置初始密码
 
@@ -260,6 +256,13 @@ curl http://localhost:8788/cron/fetch-hotsearch
 
 # 测试天气获取
 curl http://localhost:8788/cron/fetch-weather
+```
+
+### 部署 Worker（定时任务）
+
+```bash
+cd worker/
+wrangler deploy
 ```
 
 ---
