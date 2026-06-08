@@ -1297,27 +1297,19 @@
     if (!biliAccount || !biliAccount.accountId) return;
 
     var accountId = biliAccount.accountId;
-    console.log('[Bili] 开始获取, accountId:', accountId);
 
-    // 尝试策略 1: JSONP
+    // 策略 1: JSONP → 策略 2: CORS 代理
     tryJsonp(accountId, function (follower) {
       if (follower > 0) {
         reportFollower(accountId, follower);
       } else {
-        // 策略 2: CORS 代理
-        console.log('[Bili] JSONP 失败, 尝试 CORS 代理');
         tryCorsProxy(accountId, function (follower2) {
-          if (follower2 > 0) {
-            reportFollower(accountId, follower2);
-          } else {
-            console.log('[Bili] 所有策略均失败');
-          }
+          if (follower2 > 0) reportFollower(accountId, follower2);
         });
       }
     });
   }
 
-  // 策略 1: JSONP（script 标签注入）
   function tryJsonp(accountId, callback) {
     var cbName = '_biliCb' + (++_biliCallbackId);
     var done = false;
@@ -1334,71 +1326,42 @@
     }
 
     window[cbName] = function (res) {
-      console.log('[Bili][JSONP] 响应:', JSON.stringify(res));
       if (res && res.code === 0 && res.data && res.data.follower > 0) {
         finish(res.data.follower);
-      } else {
-        finish(0);
-      }
+      } else { finish(0); }
     };
 
     var script = document.createElement('script');
     script.id = 'bili-jsonp-' + _biliCallbackId;
     script.src = BILI_API + '?vmid=' + accountId + '&callback=' + cbName;
-    script.onerror = function () {
-      console.log('[Bili][JSONP] onerror');
-      finish(0);
-    };
+    script.onerror = function () { finish(0); };
     document.head.appendChild(script);
-
-    timer = setTimeout(function () {
-      console.log('[Bili][JSONP] timeout');
-      finish(0);
-    }, 6000);
+    timer = setTimeout(function () { finish(0); }, 6000);
   }
 
-  // 策略 2: CORS 代理（通过 allorigins.win 转发）
   function tryCorsProxy(accountId, callback) {
-    var apiUrl = BILI_API + '?vmid=' + accountId;
-    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
-
-    console.log('[Bili][Proxy] 请求:', proxyUrl);
+    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(BILI_API + '?vmid=' + accountId);
     fetch(proxyUrl, { signal: AbortSignal.timeout(8000) })
-      .then(function (r) {
-        console.log('[Bili][Proxy] status:', r.status);
-        if (!r.ok) throw new Error(r.status);
-        return r.json();
-      })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (res) {
-        console.log('[Bili][Proxy] 响应:', JSON.stringify(res));
-        if (res.code === 0 && res.data && res.data.follower > 0) {
-          callback(res.data.follower);
-        } else {
-          callback(0);
-        }
+        if (res.code === 0 && res.data && res.data.follower > 0) callback(res.data.follower);
+        else callback(0);
       })
-      .catch(function (e) {
-        console.log('[Bili][Proxy] 失败:', e.message || e);
-        callback(0);
-      });
+      .catch(function () { callback(0); });
   }
 
-  // 上报到服务端
   function reportFollower(accountId, follower) {
-    console.log('[Bili] 上报粉丝数:', follower);
     fetch('/api/social/client-update', {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ platform: 'bilibili', accountId: accountId, followerCount: follower })
     }).then(function (r) {
-      console.log('[Bili] 上报结果:', r.status);
       if (r.ok) {
-        // 更新页面显示
         var valEl = document.querySelector('[data-card="social"] .social-stat-value');
         if (valEl) valEl.textContent = follower.toLocaleString();
       }
-    }).catch(function (e) { console.log('[Bili] 上报失败:', e); });
+    }).catch(function () {});
   }
 
   // ===== 加载 Dashboard 数据 =====
