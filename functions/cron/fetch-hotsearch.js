@@ -270,19 +270,15 @@ async function fetchGithub(db) {
     const text = await res.text();
 
     const items = [];
-    // GitHub trending 结构：<article class="Box-row"> 内有 <h2> 中的 repo 链接
-    // 链接格式：href="/owner/repo" （带 class="Link"）
-    // 关键：只匹配带 "Link" class 的链接，过滤掉赞助者/导航链接
-    const repoLinks = text.match(/class="Link"\s+href="\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+"\s/g) ||
-                      text.match(/href="\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+"\s+class="Link"/g) || [];
+    // GitHub trending 结构：repo 链接格式为 href="/owner/repo" data-view-component="true" class="Link"
+    // 关键特征：class="Link" 后紧跟 <svg（repo 图标），过滤掉用户头像链接
+    const repoLinks = text.match(/href="\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+"\s+data-view-component="true"\s+class="Link"><svg[^>]+class="octicon octicon-repo/g) || [];
     const seen = new Set();
     for (const link of repoLinks) {
       const match = link.match(/href="\/([^"]+)"/);
       if (!match) continue;
       const repoPath = match[1];
       if (seen.has(repoPath)) continue;
-      // 确保是 /owner/repo 格式（包含斜杠）
-      if (!repoPath.includes('/') || repoPath.split('/').length !== 2) continue;
       seen.add(repoPath);
       items.push({
         rank: items.length + 1,
