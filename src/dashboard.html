@@ -1289,6 +1289,7 @@
   var _biliTimeout = null;
 
   function fetchBilibiliFollowers(socialConfig) {
+    console.log('[Bili] fetchBilibiliFollowers called', socialConfig);
     if (!socialConfig || !socialConfig.length) return;
 
     // 找到 bilibili 平台的账号
@@ -1302,6 +1303,7 @@
     if (!biliAccount || !biliAccount.accountId) return;
 
     var accountId = biliAccount.accountId;
+    console.log('[Bili] accountId:', accountId);
 
     // 清理上一次的 script 标签
     var oldScript = document.getElementById('bili-jsonp');
@@ -1310,11 +1312,14 @@
 
     // 定义全局回调（x/relation/stat 接口：{ code: 0, data: { mid, follower } }）
     window[_biliCallbackName] = function (res) {
+      console.log('[Bili] JSONP response:', JSON.stringify(res));
       try {
         if (res.code === 0 && res.data) {
           var follower = res.data.follower;
+          console.log('[Bili] follower:', follower);
           if (follower != null && follower > 0) {
             // 上报到服务端
+            console.log('[Bili] POSTing to /api/social/client-update');
             fetch('/api/social/client-update', {
               method: 'POST',
               credentials: 'same-origin',
@@ -1324,10 +1329,11 @@
                 accountId: accountId,
                 followerCount: follower
               })
-            }).catch(function () {});
+            }).then(function (r) { console.log('[Bili] POST result:', r.status); })
+              .catch(function (e) { console.log('[Bili] POST error:', e); });
           }
         }
-      } catch (e) { /* 忽略 */ }
+      } catch (e) { console.log('[Bili] callback error:', e); }
       cleanupBiliJsonp();
     };
 
@@ -1335,11 +1341,13 @@
     var script = document.createElement('script');
     script.id = 'bili-jsonp';
     script.src = 'https://api.bilibili.com/x/relation/stat?vmid=' + accountId + '&callback=' + _biliCallbackName;
-    script.onerror = cleanupBiliJsonp;
+    script.onerror = function () { console.log('[Bili] script onerror'); cleanupBiliJsonp(); };
     document.head.appendChild(script);
+    console.log('[Bili] script added, src:', script.src);
 
     // 8 秒超时
     _biliTimeout = setTimeout(function () {
+      console.log('[Bili] timeout');
       cleanupBiliJsonp();
     }, 8000);
   }
