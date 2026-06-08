@@ -590,16 +590,43 @@
       '<div class="weather-detail"><div class="weather-detail-label">月相</div><div class="weather-detail-value">32%</div></div>' +
     '</div>';
 
-  // ===== Social Mock =====
-  // 已在 HTML 中用 -- 占位，后续 API 返回后替换
+  // ===== Social 渲染 =====
+  function renderSocial(accounts) {
+    var body = document.getElementById('socialBody');
+    var platforms = [
+      { key: 'bilibili', label: 'B站', icon: 'smart_display' },
+      { key: 'youtube', label: 'YouTube', icon: 'play_circle' },
+      { key: 'twitter', label: 'Twitter/X', icon: 'tag' },
+      { key: 'instagram', label: 'Instagram', icon: 'photo_camera' }
+    ];
+
+    var html = '<div class="social-grid">';
+    platforms.forEach(function (p) {
+      var data = accounts[p.key];
+      var value = data ? data.follower_count.toLocaleString() : '--';
+      html += '<div class="social-stat">' +
+        '<div class="social-stat-icon material-symbols-outlined">' + p.icon + '</div>' +
+        '<div class="social-stat-value">' + value + '</div>' +
+        '<div class="social-stat-label">' + p.label + '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  }
 
   // ===== Auto Refresh (30s) =====
   var lastUpdate = Date.now();
 
   function refreshDashboard() {
-    // TODO: 替换为真实 API 调用
-    // api.getDashboard().then(function (data) { ... })
-    lastUpdate = Date.now();
+    api.getDashboard().then(function (data) {
+      // 更新社交媒体
+      if (data.social && data.social.accounts) {
+        renderSocial(data.social.accounts);
+      }
+      lastUpdate = Date.now();
+    }).catch(function () {
+      // 静默失败
+    });
   }
 
   setInterval(refreshDashboard, 30000);
