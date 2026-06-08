@@ -1,5 +1,8 @@
 // Cron: fetch-social（每30分钟）
 // 获取社交媒体粉丝数据
+//
+// 已知限制：B站 API 会封锁 Cloudflare Worker IP（返回 412/-401）
+// 如果需要显示 B站粉丝数，需要从非 Cloudflare IP 手动设置或使用代理
 
 const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
 
@@ -7,7 +10,6 @@ export async function onRequestGet(context) {
   const { env } = context;
   const taskName = 'fetch-social';
   var totalFetched = 0;
-  var errors = [];
 
   try {
     const lastRun = await env.DB.prepare(
@@ -30,17 +32,11 @@ export async function onRequestGet(context) {
       accounts.map(acc => fetchAccount(acc, env.DB))
     );
 
-    results.forEach((r, i) => {
-      if (r.status === 'fulfilled' && typeof r.value === 'number') {
-        totalFetched += r.value;
-      } else if (r.status === 'fulfilled' && r.value?.error) {
-        errors.push(accounts[i].platform + ': ' + r.value.error);
-      } else if (r.status === 'rejected') {
-        errors.push(accounts[i].platform + ': ' + (r.reason?.message || 'unknown'));
-      }
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && typeof r.value === 'number') totalFetched += r.value;
     });
 
-    const successCount = results.filter(r => r.status === 'fulfilled' && typeof r.value === 'number').length;
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
     await env.DB.prepare(
       `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
        VALUES (?, datetime('now'), ?)`
@@ -53,37 +49,36 @@ export async function onRequestGet(context) {
     ).bind(taskName).run().catch(() => {});
   }
 
-  const resp = { success: true, fetched: totalFetched };
-  if (errors.length) resp.errors = errors;
-  return new Response(JSON.stringify(resp), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function fetchAccount(account, db) {
   const { platform, accountId, name } = account;
 
   if (platform === 'bilibili') {
-    // 使用 x/web-interface/card 接口（返回用户信息 + 粉丝数）
-    // 注意：x/relation/stat 从 Cloudflare Worker 调用会返回 412 风控
+    // B站 API 会封锁 Cloudflare Worker IP（412/-401）
+    // 尝试 x/web-interface/card 接口，如果失败则跳过
     try {
       const res = await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${accountId}`, {
         headers: { 'User-Agent': MOBILE_UA, 'Referer': 'https://m.bilibili.com/' }
       });
       const text = await res.text();
+      // 检查是否返回 HTML（被封）
+      if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) return 0;
       const json = JSON.parse(text);
       if (json.code === 0 && json.data?.card) {
         const card = json.data.card;
-        // follower 可能在 data 层或 card 层
         const follower = json.data.follower ?? card.follower ?? 0;
-        const nickname = name || card.name || '';
-        await db.prepare(
-          `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
-           VALUES (?, ?, ?, ?)`
-        ).bind(platform, accountId, nickname, follower).run();
-        return 1;
+        if (follower > 0) {
+          await db.prepare(
+            `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
+             VALUES (?, ?, ?, ?)`
+          ).bind(platform, accountId, name || card.name || '', follower).run();
+          return 1;
+        }
       }
-      // 调试：返回 API 响应结构
-      return { error: 'bilibili api: code=' + json.code + ' data_keys=' + Object.keys(json.data || {}).join(',') };
-    } catch (e) { return { error: e.message }; }
+    } catch { /* B站 API 被封，跳过 */ }
+    return 0;
   }
 
   // YouTube 和 Twitter 需要 API key，预留接口
