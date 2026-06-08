@@ -41,6 +41,23 @@ export async function onRequestGet(context) {
     if (!weatherRes.ok) throw new Error('Weather failed');
     const weatherData = await weatherRes.json();
 
+    // 获取空气质量数据
+    let aqiData = null;
+    try {
+      const aqiRes = await fetch(
+        `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}` +
+        `&current=european_aqi&timezone=auto`
+      );
+      if (aqiRes.ok) {
+        aqiData = await aqiRes.json();
+      }
+    } catch {}
+
+    // 合并AQI到天气数据
+    if (aqiData?.current) {
+      weatherData.current.european_aqi = aqiData.current.european_aqi;
+    }
+
     // 写入缓存
     await env.DB.prepare(
       'INSERT INTO weather_cache (city, data) VALUES (?, ?)'

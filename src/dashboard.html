@@ -364,6 +364,99 @@
   margin: 0 16px;
 }
 
+/* 辅助卡片区域 */
+.wx-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px var(--card-pad) var(--card-pad);
+}
+
+/* 空气质量卡片 */
+.wx-aqi {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wx-aqi-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.wx-aqi-title .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.wx-aqi-content {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.wx-aqi-level {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--text);
+  line-height: 1;
+}
+
+.wx-aqi-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.wx-aqi-bar {
+  width: 4px;
+  height: 32px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.wx-aqi-bar-fill {
+  width: 100%;
+  border-radius: 2px;
+  transition: height 0.3s;
+}
+
+/* 生活建议卡片 */
+.wx-tip {
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.wx-tip-title {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.8);
+}
+
+.wx-tip-text {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: #fff;
+  line-height: 1.5;
+}
+
 /* ===== SOCIAL ===== */
 .social-grid {
   display: grid;
@@ -886,6 +979,28 @@
     95: '雷阵雨', 96: '雷阵雨', 99: '雷阵雨'
   };
 
+  // AQI等级描述
+  function getAqiInfo(aqi) {
+    if (aqi == null) return { level: '--', desc: '暂无数据', color: 'var(--text-muted)', pct: 0 };
+    var v = Math.round(aqi);
+    if (v <= 20) return { level: '优', desc: 'AQI ' + v, color: '#22c55e', pct: v / 100 };
+    if (v <= 40) return { level: '良', desc: 'AQI ' + v, color: '#84cc16', pct: v / 100 };
+    if (v <= 60) return { level: '中', desc: 'AQI ' + v, color: '#eab308', pct: v / 100 };
+    if (v <= 80) return { level: '较差', desc: 'AQI ' + v, color: '#f97316', pct: v / 100 };
+    return { level: '差', desc: 'AQI ' + v, color: '#ef4444', pct: Math.min(v / 100, 1) };
+  }
+
+  // 根据天气生成生活建议
+  function getWeatherTip(code, temp) {
+    if (temp != null && temp < 0) return '今天气温较低，注意保暖，外出请穿厚外套。';
+    if (temp != null && temp > 35) return '高温天气，尽量避免户外活动，注意防暑降温。';
+    if (code >= 61 && code <= 65) return '今天有雨，出门记得带伞，注意路面湿滑。';
+    if (code >= 71 && code <= 75) return '今天有雪，路面可能结冰，外出请小心慢行。';
+    if (code >= 95) return '雷阵雨天气，避免户外活动，远离高处和水域。';
+    if (code >= 45 && code <= 48) return '今天有雾，能见度低，开车请减速慢行。';
+    return '今天天气不错，非常适合外出散步，享受好时光。';
+  }
+
   var wmoIcons = {
     0: 'light_mode', 1: 'partly_cloudy_day', 2: 'partly_cloudy_day', 3: 'partly_cloudy_day',
     45: 'foggy', 48: 'foggy',
@@ -917,6 +1032,9 @@
     var sunrise = d.sunrise && d.sunrise[0] ? d.sunrise[0].slice(11, 16) : '--';
     var sunset = d.sunset && d.sunset[0] ? d.sunset[0].slice(11, 16) : '--';
     var city = dashboardData && dashboardData.weather_city ? dashboardData.weather_city : '未知';
+    var aqi = c.european_aqi;
+    var aqiInfo = getAqiInfo(aqi);
+    var tip = getWeatherTip(code, c.temperature_2m);
 
     body.innerHTML =
       '<div class="wx-container">' +
@@ -973,6 +1091,26 @@
             '<span class="wx-sun-label">日落</span>' +
             '<span class="wx-sun-time">' + sunset + '</span>' +
             '<span class="material-symbols-outlined wx-sun-icon">bedtime</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wx-secondary">' +
+          '<div class="wx-aqi">' +
+            '<div class="wx-aqi-title">' +
+              '<span class="material-symbols-outlined">airwave</span> 空气质量' +
+            '</div>' +
+            '<div class="wx-aqi-content">' +
+              '<div>' +
+                '<div class="wx-aqi-level">' + aqiInfo.level + '</div>' +
+                '<div class="wx-aqi-desc">' + aqiInfo.desc + '</div>' +
+              '</div>' +
+              '<div class="wx-aqi-bar">' +
+                '<div class="wx-aqi-bar-fill" style="height:' + (aqiInfo.pct * 100) + '%;background:' + aqiInfo.color + ';"></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="wx-tip">' +
+            '<div class="wx-tip-title">生活建议</div>' +
+            '<div class="wx-tip-text">' + tip + '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
