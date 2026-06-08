@@ -84,25 +84,52 @@ async function batchInsert(db, platform, items) {
 }
 
 // --- 微博 ---
-// 主接口：weibo.com AJAX API（无需 cookie）
-// 备用：s.weibo.com HTML 抓取（需 cookie，更稳定但脆弱）
+// 使用 s.weibo.com HTML 页面 + 硬编码 cookie（参考 newsnow）
+// cookie 来源：https://github.com/v5tech/weibo-trending-hot-search
 
 async function fetchWeibo(db) {
   try {
-    const res = await fetch('https://weibo.com/ajax/side/hotSearch', {
-      headers: { 'User-Agent': UA }
+    const res = await fetch('https://s.weibo.com/top/summary?cate=realtimehot', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+        'Cookie': 'SUB=_2AkMWIuNSf8NxqwJRmP8dy2rhaoV2ygrEieKgfhKJJRMxHRl-yT9jqk86tRB6PaLNvQZR6zYUcYVT1zSjoSreQHidcUq7',
+        'Referer': 'https://s.weibo.com/top/summary?cate=realtimehot'
+      }
     });
     if (!res.ok) return 0;
-    const json = await res.json();
-    const list = (json.data?.realtime || []).slice(0, 20);
-    if (!list.length) return 0;
+    const text = await res.text();
 
-    const items = list.map((item, i) => ({
-      rank: i + 1,
-      title: item.note || item.word || '',
-      url: item.word ? 'https://s.weibo.com/weibo?q=' + encodeURIComponent(item.word) : '',
-      heat: item.num?.toString() || ''
-    }));
+    // 从 HTML 中提取热搜项：href="/weibo?q=...&band_rank=N" >标题</a>
+    const items = [];
+    const re = /href="\/weibo\?q=[^"]*(?:band_rank=(\d+))[^"]*"[^>]*>([^<]+)<\/a>/g;
+    let m;
+    while ((m = re.exec(text)) && items.length < 20) {
+      const rank = parseInt(m[1], 10) || items.length + 1;
+      const title = m[2].trim();
+      if (!title) continue;
+      items.push({
+        rank,
+        title,
+        url: 'https://s.weibo.com' + m[0].match(/href="([^"]+)"/)[1].replace(/&amp;/g, '&'),
+        heat: ''
+      });
+    }
+
+    // 备用：如果 band_rank 正则没匹配，用更宽松的方式
+    if (!items.length) {
+      const linkRe = /href="(\/weibo\?q=[^"]+)"[^>]*>([^<]+)<\/a>/g;
+      let m2;
+      while ((m2 = linkRe.exec(text)) && items.length < 20) {
+        const title = m2[2].trim();
+        if (!title) continue;
+        items.push({
+          rank: items.length + 1,
+          title,
+          url: 'https://s.weibo.com' + m2[1].replace(/&amp;/g, '&'),
+          heat: ''
+        });
+      }
+    }
 
     return await batchInsert(db, 'weibo', items);
   } catch { return 0; }
