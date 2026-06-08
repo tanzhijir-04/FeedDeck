@@ -400,12 +400,12 @@
     </div>
   </div>
 
-  <!-- 粉丝数据 -->
+  <!-- 社交媒体 -->
   <div class="card">
     <div class="card-header">
       <div>
-        <div class="card-title">粉丝数据</div>
-        <div class="card-subtitle">社交媒体概览</div>
+        <div class="card-title">社交媒体</div>
+        <div class="card-subtitle">粉丝数据概览</div>
       </div>
     </div>
     <div class="card-body" id="socialBody">
@@ -414,21 +414,6 @@
           <div class="social-stat-icon material-symbols-outlined">smart_display</div>
           <div class="social-stat-value">--</div>
           <div class="social-stat-label">B站</div>
-        </div>
-        <div class="social-stat">
-          <div class="social-stat-icon material-symbols-outlined">play_circle</div>
-          <div class="social-stat-value">--</div>
-          <div class="social-stat-label">YouTube</div>
-        </div>
-        <div class="social-stat">
-          <div class="social-stat-icon material-symbols-outlined">tag</div>
-          <div class="social-stat-value">--</div>
-          <div class="social-stat-label">Twitter/X</div>
-        </div>
-        <div class="social-stat">
-          <div class="social-stat-icon material-symbols-outlined">photo_camera</div>
-          <div class="social-stat-value">--</div>
-          <div class="social-stat-label">Instagram</div>
         </div>
       </div>
     </div>
@@ -625,26 +610,39 @@
       '</div>';
   }
 
-  // ===== 粉丝数据 =====
-  // 已知限制：如果同一平台有多个账号（如两个 B 站账号），后注册的会覆盖前面的。
-  // 当前只支持 B 站一个平台，此问题暂不影响使用。
+  // ===== 社交媒体 =====
+  // 只显示用户配置了账号的平台
+  var platformConfig = {
+    bilibili: { label: 'B站', icon: 'smart_display' },
+    youtube: { label: 'YouTube', icon: 'play_circle' },
+    twitter: { label: 'Twitter/X', icon: 'tag' },
+    instagram: { label: 'Instagram', icon: 'photo_camera' }
+  };
+
   function renderSocial(accounts) {
     var body = document.getElementById('socialBody');
-    var platforms = [
-      { key: 'bilibili', label: 'B站', icon: 'smart_display' },
-      { key: 'youtube', label: 'YouTube', icon: 'play_circle' },
-      { key: 'twitter', label: 'Twitter/X', icon: 'tag' },
-      { key: 'instagram', label: 'Instagram', icon: 'photo_camera' }
-    ];
+
+    // 获取用户配置的平台列表
+    var configuredPlatforms = accounts ? Object.keys(accounts) : [];
+
+    // 如果没有配置任何账号，显示提示信息
+    if (configuredPlatforms.length === 0) {
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">请在配置中心添加社交媒体账号</div>';
+      return;
+    }
 
     var html = '<div class="social-grid">';
-    platforms.forEach(function (p) {
-      var data = accounts[p.key];
+    configuredPlatforms.forEach(function (platformKey) {
+      var config = platformConfig[platformKey];
+      if (!config) return; // 跳过不支持的平台
+
+      var data = accounts[platformKey];
       var value = data && data.follower_count != null ? data.follower_count.toLocaleString() : '--';
+
       html += '<div class="social-stat">' +
-        '<div class="social-stat-icon material-symbols-outlined">' + p.icon + '</div>' +
+        '<div class="social-stat-icon material-symbols-outlined">' + config.icon + '</div>' +
         '<div class="social-stat-value">' + value + '</div>' +
-        '<div class="social-stat-label">' + p.label + '</div>' +
+        '<div class="social-stat-label">' + config.label + '</div>' +
       '</div>';
     });
     html += '</div>';
