@@ -1,0 +1,23 @@
+name = "feeddeck"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "src"
+
+# D1 数据库
+[[d1_databases]]
+binding = "DB"
+database_name = "feeddeck-db"
+database_id = "<D1_DATABASE_ID>"  # 替换为实际 ID
+
+# KV 命名空间
+[[kv_namespaces]]
+binding = "KV"
+id = "<KV_NAMESPACE_ID>"  # 替换为实际 ID
+
+# 定时任务
+[triggers]
+crons = [
+  "*/5 * * * *",   # fetch-feeds + fetch-hotsearch（每5分钟）
+  "*/15 * * * *",  # sync-ics（每15分钟）
+  "*/30 * * * *",  # fetch-weather + fetch-social（每30分钟）
+  "0 0 * * *"      # cleanup（每天0点）
+]
