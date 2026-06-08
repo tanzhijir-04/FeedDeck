@@ -38,8 +38,8 @@
   /* === 字体系统 === */
   /* 中文显示体：思源宋体 — 用于标题、品牌名 */
   --font-display-zh: "Noto Serif SC", "Source Han Serif SC", "STSong", "SimSun", serif;
-  /* 中文正文：苹方 — 用于正文、标签 */
-  --font-body-zh:    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  /* 中文正文：苹方/思源黑体 — 用于正文、标签 */
+  --font-body-zh:    "PingFang SC", "Source Han Sans SC", "Noto Sans SC", "Hiragino Sans GB", sans-serif;
   /* 英文显示体：Georgia — 用于标题、数字 */
   --font-display-en: Georgia, "Times New Roman", serif;
   /* 英文正文：系统 sans */
