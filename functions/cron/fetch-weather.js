@@ -69,6 +69,7 @@ export async function onRequestGet(context) {
       `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
        VALUES (?, datetime('now'), 'error')`
     ).bind(taskName).run().catch(() => {});
+    return new Response(JSON.stringify({ success: false, error: e.message, fetched: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
   return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
