@@ -17,7 +17,8 @@ export async function onRequestGet(context) {
 ]);
 
     return new Response(JSON.stringify({
-      feeds, hotsearch, weather, todos, calendar, social, weather_city: weatherCity || '北京'), {
+      feeds, hotsearch, weather, todos, calendar, social, weather_city: weatherCity || '北京'
+    }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
