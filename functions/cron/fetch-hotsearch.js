@@ -269,45 +269,38 @@ async function fetchGithub(db) {
     if (!res.ok) return 0;
     const text = await res.text();
 
-    // 用正则从 HTML 中提取 trending 仓库
-    // 每个仓库在 <article> 标签中，<h2> 里有 <a href="/owner/repo">
     const items = [];
-    const repoRe = /href="\/([^"]+)"[^>]*>\s*\1\s*<\/a>/g;
-    const articleRe = /<article class="Box-row">([\s\S]*?)<\/article>/g;
-    let articleMatch;
-
-    while ((articleMatch = articleRe.exec(text)) && items.length < 15) {
-      const block = articleMatch[1];
-
-      // 提取仓库名（/owner/repo 格式）
-      const repoMatch = block.match(/href="\/([^"]+)"[^>]*>\s*<[^>]+>\s*<[^>]+>\s*([^<]+)/);
-      if (!repoMatch) continue;
-      const repoPath = repoMatch[1].trim();
-      const repoName = repoMatch[2].trim() || repoPath;
-
-      // 提取 star 数
-      const starMatch = block.match(/href="\/[^"]+\/stargazers"[^>]*>\s*(?:<[^>]+>)*\s*([\d,]+)/);
-      const stars = starMatch ? starMatch[1].replace(/,/g, '') : '';
-
+    // GitHub trending 结构：<article class="Box-row"> 内有 <h2> 中的 repo 链接
+    // 链接格式：href="/owner/repo" （带 class="Link"）
+    // 关键：只匹配带 "Link" class 的链接，过滤掉赞助者/导航链接
+    const repoLinks = text.match(/class="Link"\s+href="\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+"\s/g) ||
+                      text.match(/href="\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+"\s+class="Link"/g) || [];
+    const seen = new Set();
+    for (const link of repoLinks) {
+      const match = link.match(/href="\/([^"]+)"/);
+      if (!match) continue;
+      const repoPath = match[1];
+      if (seen.has(repoPath)) continue;
+      // 确保是 /owner/repo 格式（包含斜杠）
+      if (!repoPath.includes('/') || repoPath.split('/').length !== 2) continue;
+      seen.add(repoPath);
       items.push({
         rank: items.length + 1,
         title: repoPath,
         url: 'https://github.com/' + repoPath,
-        heat: stars ? stars + ' stars' : ''
+        heat: ''
       });
+      if (items.length >= 15) break;
     }
 
-    // 如果 article 正则没匹配到，用更宽松的方式
-    if (!items.length) {
-      const linkRe = /class="[^"]*repo[^"]*"[^>]*href="\/([^"]+)"/g;
-      let m;
-      while ((m = linkRe.exec(text)) && items.length < 15) {
-        items.push({
-          rank: items.length + 1,
-          title: m[1],
-          url: 'https://github.com/' + m[1],
-          heat: ''
-        });
+    // 补充 star 数：从 stargazers 链接中提取
+    const starLinks = text.match(/href="\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/stargazers"[\s\S]*?<\/a>/g) || [];
+    for (const starLink of starLinks) {
+      const repoPath = starLink.match(/href="\/([^/]+\/[^/]+)\/stargazers"/)?.[1];
+      const starText = starLink.match(/>\s*([\d,]+)\s*<\/a>/);
+      if (repoPath && starText) {
+        const item = items.find(i => i.title === repoPath);
+        if (item) item.heat = starText[1] + ' stars';
       }
     }
 
