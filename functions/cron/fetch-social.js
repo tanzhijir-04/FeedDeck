@@ -33,6 +33,8 @@ export async function onRequestGet(context) {
     results.forEach((r, i) => {
       if (r.status === 'fulfilled' && typeof r.value === 'number') {
         totalFetched += r.value;
+      } else if (r.status === 'fulfilled' && r.value?.error) {
+        errors.push(accounts[i].platform + ': ' + r.value.error);
       } else if (r.status === 'rejected') {
         errors.push(accounts[i].platform + ': ' + (r.reason?.message || 'unknown'));
       }
