@@ -1,4 +1,4 @@
-// Cron: fetch-hotsearch（每5分钟）
+﻿// Cron: fetch-hotsearch（每5分钟）
 // 抓取各平台热搜数据
 
 export async function onRequestGet(context) {
@@ -14,14 +14,14 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 4 * 60 * 1000) return;
+      if (elapsed < 4 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     // 获取启用的平台
     const platformsStr = await env.KV.get('config:hotsearch_platforms');
-    if (!platformsStr) return;
+    if (!platformsStr) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     const platforms = JSON.parse(platformsStr);
-    if (!platforms.length) return;
+    if (!platforms.length) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     // 并行抓取所有平台
     const fetchers = {
@@ -54,6 +54,8 @@ export async function onRequestGet(context) {
        VALUES (?, datetime('now'), 'error')`
     ).bind(taskName).run().catch(() => {});
   }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 // --- 各平台抓取器 ---
@@ -255,4 +257,6 @@ function getDateNDaysAgo(n) {
   const d = new Date();
   d.setDate(d.getDate() - n);
   return d.toISOString().split('T')[0];
+
+
 }

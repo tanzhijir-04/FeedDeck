@@ -1,4 +1,4 @@
-// Cron: fetch-feeds（每5分钟）
+﻿// Cron: fetch-feeds（每5分钟）
 // 抓取所有 RSS/Atom 源，写入 D1
 
 export async function onRequestGet(context) {
@@ -15,14 +15,14 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 4 * 60 * 1000) return; // 4 分钟内不重复执行
+      if (elapsed < 4 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     // 获取 RSS 源列表
     const feedsStr = await env.KV.get('config:rss_feeds');
-    if (!feedsStr) return;
+    if (!feedsStr) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     const feeds = JSON.parse(feedsStr);
-    if (!feeds.length) return;
+    if (!feeds.length) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     // 并行抓取所有源
     const results = await Promise.allSettled(
@@ -42,6 +42,8 @@ export async function onRequestGet(context) {
        VALUES (?, datetime('now'), 'error')`
     ).bind(taskName).run().catch(() => {});
   }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function fetchFeed(feed, db) {
@@ -83,6 +85,8 @@ async function fetchFeed(feed, db) {
   } catch {
     // clearTimeout already called in try block
   }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 // 简易 RSS/Atom 解析
@@ -126,4 +130,6 @@ function extractAttr(str, tag, attr) {
   const re = new RegExp('<' + tag + '[^>]*' + attr + '=["\']([^"\']*)["\']', 'i');
   const m = str.match(re);
   return m ? m[1].trim() : null;
+
+
 }

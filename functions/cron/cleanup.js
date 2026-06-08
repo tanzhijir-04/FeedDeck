@@ -1,4 +1,4 @@
-// Cron: cleanup（每天0点）
+﻿// Cron: cleanup（每天0点）
 // 清理过期数据
 
 export async function onRequestGet(context) {
@@ -15,7 +15,7 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 23 * 60 * 60 * 1000) return; // 23 小时内不重复
+      if (elapsed < 23 * 60 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
     // 清理 7 天前的热搜数据
     await env.DB.prepare(
@@ -58,4 +58,6 @@ export async function onRequestGet(context) {
        VALUES (?, datetime('now'), 'error')`
     ).bind(taskName).run().catch(() => {});
   }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }

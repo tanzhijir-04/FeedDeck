@@ -1,4 +1,4 @@
-// Cron: fetch-social（每30分钟）
+﻿// Cron: fetch-social（每30分钟）
 // 获取社交媒体粉丝数据
 
 export async function onRequestGet(context) {
@@ -14,13 +14,13 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 25 * 60 * 1000) return;
+      if (elapsed < 25 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     const accountsStr = await env.KV.get('config:social_accounts');
-    if (!accountsStr) return;
+    if (!accountsStr) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     const accounts = JSON.parse(accountsStr);
-    if (!accounts.length) return;
+    if (!accounts.length) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     const results = await Promise.allSettled(
       accounts.map(acc => fetchAccount(acc, env.DB))
@@ -38,6 +38,8 @@ export async function onRequestGet(context) {
        VALUES (?, datetime('now'), 'error')`
     ).bind(taskName).run().catch(() => {});
   }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function fetchAccount(account, db) {
@@ -60,4 +62,6 @@ async function fetchAccount(account, db) {
 
   // YouTube 和 Twitter 需要 API key，预留接口
   // 实际部署时需要配置 YOUTUBE_API_KEY / TWITTER_BEARER_TOKEN
+
+
 }

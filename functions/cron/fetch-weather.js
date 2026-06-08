@@ -1,4 +1,4 @@
-// Cron: fetch-weather（每30分钟）
+﻿// Cron: fetch-weather（每30分钟）
 // 从 Open-Meteo 获取天气数据
 
 export async function onRequestGet(context) {
@@ -14,11 +14,11 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 25 * 60 * 1000) return;
+      if (elapsed < 25 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     const city = await env.KV.get('config:weather_city');
-    if (!city) return;
+    if (!city) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     // Open-Meteo 地理编码
     const geoRes = await fetch(
@@ -61,4 +61,6 @@ export async function onRequestGet(context) {
        VALUES (?, datetime('now'), 'error')`
     ).bind(taskName).run().catch(() => {});
   }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }

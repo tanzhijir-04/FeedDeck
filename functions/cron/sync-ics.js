@@ -1,4 +1,4 @@
-// Cron: sync-ics（每15分钟）
+﻿// Cron: sync-ics（每15分钟）
 // 同步 ICS 日历订阅
 
 export async function onRequestGet(context) {
@@ -14,13 +14,13 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 10 * 60 * 1000) return;
+      if (elapsed < 10 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     const subsStr = await env.KV.get('config:calendar_subs');
-    if (!subsStr) return;
+    if (!subsStr) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     const subs = JSON.parse(subsStr);
-    if (!subs.length) return;
+    if (!subs.length) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     const results = await Promise.allSettled(
       subs.map(sub => syncOneIcs(sub, env.DB))
@@ -38,6 +38,8 @@ export async function onRequestGet(context) {
        VALUES (?, datetime('now'), 'error')`
     ).bind(taskName).run().catch(() => {});
   }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function syncOneIcs(sub, db) {
@@ -135,4 +137,6 @@ function parseICSDate(str) {
     return `${str.slice(0,4)}-${str.slice(4,6)}-${str.slice(6,8)}`;
   }
   return `${str.slice(0,4)}-${str.slice(4,6)}-${str.slice(6,8)}T${str.slice(9,11)}:${str.slice(11,13)}:${str.slice(13,15)}`;
+
+
 }
