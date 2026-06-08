@@ -6,9 +6,9 @@ pages_build_output_dir = "src"
 [[d1_databases]]
 binding = "DB"
 database_name = "feeddeck-db"
-database_id = "<D1_DATABASE_ID>"  # 替换为实际 ID
+database_id = "69438eef-2e4b-49b3-803d-8bf853ed9163"
 
 # KV 命名空间
 [[kv_namespaces]]
 binding = "KV"
-id = "<KV_NAMESPACE_ID>"  # 替换为实际 ID
+id = "e88e12c264f14cc5818de69487a125fe"
