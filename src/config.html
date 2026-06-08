@@ -779,10 +779,10 @@
     }
 
     api.changePassword(oldPwd, newPwd).then(function () {
-      app.showToast('密码已更新', 'success');
-      document.getElementById('oldPwdInput').value = '';
-      document.getElementById('newPwdInput').value = '';
-      document.getElementById('confirmPwdInput').value = '';
+      app.showToast('密码已更新，请重新登录', 'success');
+      setTimeout(function () {
+        window.location.href = '/';
+      }, 1500);
     }).catch(function (err) {
       app.showToast(err.message || '密码更新失败', 'error');
     });
@@ -997,7 +997,9 @@
 
   // Header 中的"添加账号"按钮改为滚动到底部表单
   document.getElementById('addSocialBtn').addEventListener('click', function () {
-    document.getElementById('socialAccountId').focus();
+    var el = document.getElementById('socialAccountId');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus();
   });
 
   // ===== 日历订阅管理 =====

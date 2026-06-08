@@ -63,7 +63,8 @@ async function getHotsearch(env) {
          SELECT MAX(fetched_at) FROM hotsearch_items h2
          WHERE h2.platform = hotsearch_items.platform
        )
-       ORDER BY platform, rank`
+       ORDER BY platform, rank
+       LIMIT 150`
     ).all();
 
     const platforms = {};
@@ -120,14 +121,12 @@ async function getTodos(env) {
 // 日历：今天和未来的事件
 async function getCalendar(env) {
   try {
-    const today = new Date().toISOString().split('T')[0];
     const rows = await env.DB.prepare(
       `SELECT id, title, start_time, end_time, description, location, all_day, source
        FROM calendar_events
-       WHERE start_time >= ?
        ORDER BY start_time ASC
-       LIMIT 20`
-    ).bind(today).all();
+       LIMIT 50`
+    ).all();
 
     return { events: rows.results || [] };
   } catch {

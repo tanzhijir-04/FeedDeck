@@ -640,7 +640,7 @@
     var html = '<div class="social-grid">';
     platforms.forEach(function (p) {
       var data = accounts[p.key];
-      var value = data ? data.follower_count.toLocaleString() : '--';
+      var value = data && data.follower_count != null ? data.follower_count.toLocaleString() : '--';
       html += '<div class="social-stat">' +
         '<div class="social-stat-icon material-symbols-outlined">' + p.icon + '</div>' +
         '<div class="social-stat-value">' + value + '</div>' +

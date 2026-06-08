@@ -56,7 +56,8 @@ export async function onRequestPut(context) {
       'INSERT INTO sessions (token, expires_at) VALUES (?, ?)'
     ).bind(token, expiresAt).run();
 
-    const cookie = `fd_session=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${30 * 24 * 60 * 60}`;
+    const isSecure = new URL(request.url).protocol === 'https:';
+    const cookie = `fd_session=${token}; Path=/; HttpOnly${isSecure ? '; Secure' : ''}; SameSite=Strict; Max-Age=${30 * 24 * 60 * 60}`;
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
