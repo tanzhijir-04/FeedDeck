@@ -508,8 +508,8 @@
   };
 
   // ===== 防抖机制 =====
-  var emptyCounters = { todo: 0, schedule: 0 };
-  var HIDE_THRESHOLD = 1;
+  var emptyTimers = { todo: null, schedule: null };
+  var HIDE_DELAY = 5000; // 5秒后隐藏空卡片
 
   // ===== 状态管理 =====
   var dashboardData = null;
@@ -545,20 +545,59 @@
     return 'S3';
   }
 
-  function updateEmptyCounters(data) {
+  // 隐藏状态追踪
+  var hiddenByEmpty = { todo: false, schedule: false };
+
+  function updateEmptyTimers(data) {
     var hasTodos = data.todos && data.todos.items && data.todos.items.length > 0;
     var hasSchedule = getTodayEvents(data.calendar).length > 0;
 
-    if (hasTodos) emptyCounters.todo = 0;
-    else emptyCounters.todo++;
+    // 待办事项
+    if (hasTodos) {
+      // 有数据，取消定时器并恢复显示
+      if (emptyTimers.todo) {
+        clearTimeout(emptyTimers.todo);
+        emptyTimers.todo = null;
+      }
+      if (hiddenByEmpty.todo) {
+        hiddenByEmpty.todo = false;
+        showCards(['todo']);
+      }
+    } else if (!emptyTimers.todo && !hiddenByEmpty.todo) {
+      // 无数据，启动5秒定时器
+      emptyTimers.todo = setTimeout(function () {
+        emptyTimers.todo = null;
+        hiddenByEmpty.todo = true;
+        hideCards(['todo']);
+        flipLayout(currentState, getEffectiveState(currentData));
+      }, HIDE_DELAY);
+    }
 
-    if (hasSchedule) emptyCounters.schedule = 0;
-    else emptyCounters.schedule++;
+    // 日程
+    if (hasSchedule) {
+      // 有数据，取消定时器并恢复显示
+      if (emptyTimers.schedule) {
+        clearTimeout(emptyTimers.schedule);
+        emptyTimers.schedule = null;
+      }
+      if (hiddenByEmpty.schedule) {
+        hiddenByEmpty.schedule = false;
+        showCards(['schedule']);
+      }
+    } else if (!emptyTimers.schedule && !hiddenByEmpty.schedule) {
+      // 无数据，启动5秒定时器
+      emptyTimers.schedule = setTimeout(function () {
+        emptyTimers.schedule = null;
+        hiddenByEmpty.schedule = true;
+        hideCards(['schedule']);
+        flipLayout(currentState, getEffectiveState(currentData));
+      }, HIDE_DELAY);
+    }
   }
 
   function getEffectiveState(data) {
-    var hasTodos = emptyCounters.todo < HIDE_THRESHOLD;
-    var hasSchedule = emptyCounters.schedule < HIDE_THRESHOLD;
+    var hasTodos = !hiddenByEmpty.todo && data.todos && data.todos.items && data.todos.items.length > 0;
+    var hasSchedule = !hiddenByEmpty.schedule && getTodayEvents(data.calendar).length > 0;
 
     if (hasTodos && hasSchedule) return 'S0';
     if (hasTodos && !hasSchedule) return 'S1';
@@ -891,8 +930,8 @@
       var data = await api.getDashboard();
       currentData = data;
 
-      // 更新防抖计数器
-      updateEmptyCounters(data);
+      // 更新空卡片定时器
+      updateEmptyTimers(data);
 
       // 检测新状态
       var newState = getEffectiveState(data);
