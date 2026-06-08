@@ -17,8 +17,8 @@
 
   /* 文字色 */
   --text:        #e4e4e7;
-  --text-dim:    #9ca3af;
-  --text-muted:  #6b7280;
+  --text-dim:    #b0b8c4;
+  --text-muted:  #8491a5;
 
   /* 语义色 */
   --primary:     #f97316;
@@ -57,16 +57,16 @@
   --font-display: var(--font-display-zh), var(--font-display-en), serif;
   --font-body:    var(--font-body-zh), var(--font-body-en), sans-serif;
 
-  /* === 字号体系（数据密集型 UI） === */
-  --text-xs:    11px;    /* 标签、时间戳 */
-  --text-sm:    12px;    /* 次要文字、列表项 */
-  --text-base:  13px;    /* 正文 */
-  --text-md:    14px;    /* 默认正文 */
-  --text-lg:    16px;    /* 卡片标题 */
-  --text-xl:    20px;    /* 页面标题 */
-  --text-2xl:   28px;    /* 大数字（天气、粉丝数） */
-  --text-3xl:   40px;    /* 超大数字（温度） */
-  --text-4xl:   64px;    /* 超大温度数字（新闻风格） */
+  /* === 字号体系（iPad Mini @1m 观看距离） === */
+  --text-xs:    18px;    /* 标签、时间戳（短文本） */
+  --text-sm:    20px;    /* 次要文字、列表辅助信息 */
+  --text-base:  24px;    /* 正文短段落 */
+  --text-md:    26px;    /* 默认正文 */
+  --text-lg:    30px;    /* 卡片标题 */
+  --text-xl:    36px;    /* 页面标题 */
+  --text-2xl:   48px;    /* 大数字（粉丝数） */
+  --text-3xl:   64px;    /* 超大数字（温度） */
+  --text-4xl:   88px;    /* 超大温度数字（新闻风格） */
 }
 
 /* === 亮色主题 — 跟随系统 === */
@@ -79,8 +79,8 @@
     --border:      #e2e2e2;
 
     --text:        #1a1a1a;
-    --text-dim:    #555555;
-    --text-muted:  #999999;
+    --text-dim:    #444444;
+    --text-muted:  #777777;
 
     --primary:     #e86a1a;
     --primary-dim: rgba(232,106,26,0.1);
@@ -103,7 +103,8 @@ html, body {
   overflow: hidden;
   font-family: var(--font-body);
   font-size: var(--text-md);
-  line-height: 1.5;
+  line-height: 1.65;
+  font-weight: 500;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -119,12 +120,11 @@ a:hover { text-decoration: underline; }
 .font-mono    { font-family: var(--font-mono); }
 
 /* 字重层级：
-   300 = 数据大数字（轻盈感）
-   400 = 正文、宋体/Georgia 标题（优雅感）
-   500 = 标签、按钮、强调
+   400 = 宋体/Georgia 标题（优雅感）
+   500 = 正文、标签、按钮、数据数字
    600 = 卡片标题、重要标识
+   700 = 超强调
 */
-.wt-light  { font-weight: 300; }
 .wt-regular { font-weight: 400; }
 .wt-medium { font-weight: 500; }
 .wt-semibold { font-weight: 600; }
@@ -165,7 +165,7 @@ a:hover { text-decoration: underline; }
 .card-subtitle {
   font-size: var(--text-xs);
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .card-body {
@@ -219,7 +219,7 @@ a:hover { text-decoration: underline; }
 
 .btn-sm { padding: 4px 10px; font-size: var(--text-sm); }
 
-.btn .material-symbols-outlined { font-size: 16px; }
+.btn .material-symbols-outlined { font-size: 24px; }
 
 /* === FORMS === */
 .form-group { margin-bottom: 16px; }
@@ -271,9 +271,9 @@ select.form-input {
 .tabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 16px;
-  font-size: 11px;
+  font-size: 18px;
   font-weight: 500;
   border: none;
   cursor: pointer;
@@ -281,6 +281,7 @@ select.form-input {
   color: var(--text-dim);
   font-family: var(--font-body);
   transition: all 0.15s;
+  white-space: nowrap;
 }
 
 .tab.active { background: var(--primary); color: #fff; }
@@ -325,9 +326,9 @@ select.form-input {
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 4px 12px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: 16px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -408,7 +409,7 @@ select.form-input {
   flex-shrink: 0;
 }
 
-.source-icon .material-symbols-outlined { font-size: 16px; }
+.source-icon .material-symbols-outlined { font-size: 24px; }
 
 /* === LOADING / SKELETON === */
 .skeleton {
