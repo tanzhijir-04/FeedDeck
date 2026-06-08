@@ -693,6 +693,33 @@
   // ===== 注册 GSAP 插件 =====
   gsap.registerPlugin(Flip);
 
+  // ===== 数字滚动动效 =====
+  function animateNumber(el, target, duration) {
+    if (el._animating) return;
+    var start = parseInt(el.textContent.replace(/[^0-9]/g, '')) || 0;
+    if (start === target) return;
+    duration = duration || 800;
+    el._animating = true;
+    var startTime = null;
+
+    // easeOutQuart
+    function ease(t) { return 1 - Math.pow(1 - t, 4); }
+
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      var progress = Math.min((ts - startTime) / duration, 1);
+      var current = Math.round(start + (target - start) * ease(progress));
+      el.textContent = current.toLocaleString();
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.textContent = target.toLocaleString();
+        el._animating = false;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
   // ===== 登录检查 =====
   api.checkAuth().catch(function () {
     window.location.href = '/';
@@ -1115,7 +1142,7 @@
           '<div class="wx-header-right">' +
             '<span class="material-symbols-outlined wx-icon-main">' + icon + '</span>' +
             '<div class="wx-temp-row">' +
-              '<span class="wx-temp">' + temp + '</span>' +
+              '<span class="wx-temp" data-target="' + temp + '">0</span>' +
               '<span class="wx-degree">°</span>' +
             '</div>' +
           '</div>' +
@@ -1180,6 +1207,10 @@
           '</div>' +
         '</div>' +
       '</div>';
+
+    // 温度数字滚动
+    var tempEl = body.querySelector('.wx-temp');
+    if (tempEl) animateNumber(tempEl, temp, 800);
   }
 
   var platformConfig = {
@@ -1238,33 +1269,41 @@
         return;
       }
       var data = accounts[key];
-      var value = data && data.follower_count != null ? data.follower_count.toLocaleString() : '--';
+      var numVal = data && data.follower_count != null ? data.follower_count : null;
       body.innerHTML =
         '<div class="social-single">' +
           '<div class="social-platform-icon" style="background:' + config.color + '15;">' + config.svg + '</div>' +
           '<div class="social-stat-label">' + config.label + '</div>' +
-          '<div class="social-stat-value">' + value + '</div>' +
+          '<div class="social-stat-value">' + (numVal != null ? '0' : '--') + '</div>' +
         '</div>';
+      if (numVal != null) {
+        animateNumber(body.querySelector('.social-stat-value'), numVal, 800);
+      }
       return;
     }
 
     // 多账号：网格布局
     var html = '<div class="social-grid">';
+    var nums = [];
     configuredPlatforms.forEach(function (platformKey) {
       var config = platformConfig[platformKey];
       if (!config) return;
 
       var data = accounts[platformKey];
-      var value = data && data.follower_count != null ? data.follower_count.toLocaleString() : '--';
+      var numVal = data && data.follower_count != null ? data.follower_count : null;
 
       html += '<div class="social-stat">' +
         '<div class="social-stat-icon">' + config.svg + '</div>' +
-        '<div class="social-stat-value">' + value + '</div>' +
+        '<div class="social-stat-value">' + (numVal != null ? '0' : '--') + '</div>' +
         '<div class="social-stat-label">' + config.label + '</div>' +
       '</div>';
+      if (numVal != null) nums.push(numVal);
     });
     html += '</div>';
     body.innerHTML = html;
+    // 逐个动画
+    var valEls = body.querySelectorAll('.social-stat-value');
+    nums.forEach(function (n, i) { animateNumber(valEls[i], n, 800); });
   }
 
   function renderAll(data) {
@@ -1359,7 +1398,7 @@
     }).then(function (r) {
       if (r.ok) {
         var valEl = document.querySelector('[data-card="social"] .social-stat-value');
-        if (valEl) valEl.textContent = follower.toLocaleString();
+        if (valEl) animateNumber(valEl, follower, 800);
       }
     }).catch(function () {});
   }
