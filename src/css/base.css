@@ -1,0 +1,498 @@
+/* ============================================
+   FeedDeck — Base Styles
+   暗/亮主题自适应 · iPad mini · iOS 12 Safari
+   ============================================ */
+
+/* === RESET === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* === DESIGN TOKENS — DARK (default) === */
+:root {
+  /* 表面色 */
+  --bg:          #0f1117;
+  --surface:     #1a1d27;
+  --surface-alt: #232733;
+  --border:      #2e3240;
+
+  /* 文字色 */
+  --text:        #e4e4e7;
+  --text-dim:    #9ca3af;
+  --text-muted:  #6b7280;
+
+  /* 语义色 */
+  --primary:     #f97316;
+  --primary-dim: rgba(249,115,22,0.15);
+  --success:     #22c55e;
+  --success-dim: rgba(34,197,94,0.15);
+  --error:       #ef4444;
+  --error-dim:   rgba(239,68,68,0.15);
+  --warning:     #eab308;
+  --warning-dim: rgba(234,179,8,0.15);
+
+  /* 布局 */
+  --gap:         12px;
+  --radius:      8px;
+  --card-pad:    16px;
+  --sidebar-w:   200px;
+
+  /* === 字体系统 === */
+  /* 中文显示体：思源宋体 — 用于标题、品牌名 */
+  --font-display-zh: "Noto Serif SC", "Source Han Serif SC", "STSong", "SimSun", serif;
+  /* 中文正文：苹方 — 用于正文、标签 */
+  --font-body-zh:    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  /* 英文显示体：Georgia — 用于标题、数字 */
+  --font-display-en: Georgia, "Times New Roman", serif;
+  /* 英文正文：系统 sans */
+  --font-body-en:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  /* 等宽 */
+  --font-mono:       "SF Mono", Menlo, Monaco, "Courier New", monospace;
+
+  /* 组合字体栈（中文优先 + 英文回退） */
+  --font-display: var(--font-display-zh), var(--font-display-en), serif;
+  --font-body:    var(--font-body-zh), var(--font-body-en), sans-serif;
+
+  /* === 字号体系（数据密集型 UI） === */
+  --text-xs:    11px;    /* 标签、时间戳 */
+  --text-sm:    12px;    /* 次要文字、列表项 */
+  --text-base:  13px;    /* 正文 */
+  --text-md:    14px;    /* 默认正文 */
+  --text-lg:    16px;    /* 卡片标题 */
+  --text-xl:    20px;    /* 页面标题 */
+  --text-2xl:   28px;    /* 大数字（天气、粉丝数） */
+  --text-3xl:   40px;    /* 超大数字（温度） */
+}
+
+/* === 亮色主题 — 跟随系统 === */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:          #f8f8f8;
+    --surface:     #ffffff;
+    --surface-alt: #f0f0f0;
+    --border:      #e2e2e2;
+
+    --text:        #1a1a1a;
+    --text-dim:    #555555;
+    --text-muted:  #999999;
+
+    --primary:     #e86a1a;
+    --primary-dim: rgba(232,106,26,0.1);
+    --success:     #16a34a;
+    --success-dim: rgba(22,163,74,0.1);
+    --error:       #dc2626;
+    --error-dim:   rgba(220,38,38,0.1);
+    --warning:     #ca8a04;
+    --warning-dim: rgba(202,138,4,0.1);
+  }
+}
+
+/* === BASE === */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* === 字体工具类 === */
+.font-display { font-family: var(--font-display); }
+.font-body    { font-family: var(--font-body); }
+.font-mono    { font-family: var(--font-mono); }
+
+/* 字重层级：
+   300 = 数据大数字（轻盈感）
+   400 = 正文、宋体/Georgia 标题（优雅感）
+   500 = 标签、按钮、强调
+   600 = 卡片标题、重要标识
+*/
+.wt-light  { font-weight: 300; }
+.wt-regular { font-weight: 400; }
+.wt-medium { font-weight: 500; }
+.wt-semibold { font-weight: 600; }
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* === CARD === */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px var(--card-pad);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.card-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.card-body {
+  padding: 10px var(--card-pad);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* === BUTTONS === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+
+.btn:active { opacity: 0.8; }
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover { background: var(--surface-alt); color: var(--text); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+
+.btn-danger:hover { background: var(--error-dim); }
+
+.btn-sm { padding: 4px 10px; font-size: var(--text-sm); }
+
+.btn .material-symbols-outlined { font-size: 16px; }
+
+/* === FORMS === */
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color 0.15s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-input::placeholder { color: var(--text-muted); }
+
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* === TABS === */
+.tabs { display: flex; gap: 4px; }
+
+.tab {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  transition: all 0.15s;
+}
+
+.tab.active { background: var(--primary); color: #fff; }
+.tab:hover:not(.active) { background: var(--surface-alt); color: var(--text); }
+
+/* === TOGGLE SWITCH === */
+.toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+.toggle-track {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--border);
+  border-radius: 11px;
+  transition: background 0.2s;
+}
+
+.toggle-track::before {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  left: 3px; bottom: 3px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.toggle input:checked + .toggle-track { background: var(--primary); }
+.toggle input:checked + .toggle-track::before {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+/* === TAG === */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tag-primary { background: var(--primary-dim); color: var(--primary); }
+.tag-success { background: var(--success-dim); color: var(--success); }
+.tag-error   { background: var(--error-dim);   color: var(--error); }
+.tag-muted   { background: var(--surface-alt);  color: var(--text-muted); }
+
+/* === TABLE === */
+.table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  padding: 10px 12px;
+  font-size: var(--text-base);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: rgba(128,128,128,0.04); }
+
+.table .icon-btn {
+  width: 30px; height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.table .icon-btn:hover { background: var(--surface-alt); color: var(--text); }
+.table .icon-btn.delete:hover { background: var(--error-dim); color: var(--error); }
+
+.table .url-cell {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* === SOURCE ICON === */
+.source-icon {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.source-icon .material-symbols-outlined { font-size: 16px; }
+
+/* === LOADING / SKELETON === */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-alt) 25%, var(--border) 50%, var(--surface-alt) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.skeleton-line.w-full { width: 100%; }
+.skeleton-line.w-3-4  { width: 75%; }
+.skeleton-line.w-1-2  { width: 50%; }
+
+/* === TOAST === */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: var(--text-base);
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.toast.show { opacity: 1; }
+.toast-success { background: var(--success); color: #fff; }
+.toast-error   { background: var(--error);   color: #fff; }
+
+/* === DIALOG / MODAL === */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 90%;
+  max-width: 420px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* === EMPTY STATE === */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.empty-state .material-symbols-outlined {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+
+/* === STATUS DOT === */
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.green  { background: var(--success); }
+.status-dot.yellow { background: var(--warning); }
+.status-dot.red    { background: var(--error); }

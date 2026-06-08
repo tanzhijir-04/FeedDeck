@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FeedDeck</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/base.css"/>
+<style>
+/* ===== GRID ===== */
+.grid {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+
+@media (orientation: landscape) {
+  .grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}
+
+/* ===== HOT SEARCH ===== */
+.hot-list { list-style: none; }
+
+.hot-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.hot-item:last-child { border-bottom: none; }
+
+.hot-rank {
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display-en), Georgia, serif;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.hot-rank.top { background: var(--primary); color: #fff; }
+.hot-rank.normal { background: var(--surface-alt); color: var(--text-muted); }
+
+.hot-text {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hot-heat {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ===== NEWS ===== */
+.news-item {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.news-item:last-child { border-bottom: none; }
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.news-source {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.news-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.news-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ===== TODOS ===== */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.todo-item:last-child { border-bottom: none; }
+
+.todo-check {
+  width: 16px; height: 16px;
+  border: 2px solid var(--text-muted);
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.todo-check:hover { border-color: var(--primary); }
+
+.todo-check.done {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.todo-check.done::after {
+  content: '✓';
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.todo-item.done .todo-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.todo-deadline {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.todo-deadline.overdue { color: var(--error); font-weight: 500; }
+
+/* ===== SCHEDULE ===== */
+.schedule-item {
+  display: flex;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.schedule-item:last-child { border-bottom: none; }
+
+.schedule-time {
+  font-family: var(--font-display-en), Georgia, serif;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  width: 80px;
+  flex-shrink: 0;
+  font-weight: 400;
+  padding-top: 1px;
+}
+
+.schedule-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.schedule-content { flex: 1; }
+
+.schedule-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.schedule-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* ===== WEATHER ===== */
+.weather-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.weather-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.weather-temp {
+  font-family: var(--font-display-en), Georgia, serif;
+  font-size: var(--text-3xl);
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1;
+}
+
+.weather-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.weather-icon {
+  font-size: 40px;
+  color: var(--primary);
+}
+
+.weather-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.weather-detail {
+  text-align: center;
+  padding: 6px;
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+}
+
+.weather-detail-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.weather-detail-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ===== SOCIAL ===== */
+.social-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  height: 100%;
+  align-content: center;
+}
+
+.social-stat {
+  text-align: center;
+  padding: 12px 8px;
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+}
+
+.social-stat-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.social-stat-value {
+  font-family: var(--font-display-en), Georgia, serif;
+  font-size: var(--text-2xl);
+  font-weight: 300;
+  color: var(--text);
+}
+
+.social-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.social-stat-change {
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+.social-stat-change.up { color: var(--success); }
+.social-stat-change.down { color: var(--error); }
+
+/* ===== DATA VALUES (大数字轻字重) ===== */
+.data-value {
+  font-family: var(--font-display-en), Georgia, serif;
+  font-weight: 300;
+  color: var(--text);
+}
+
+.data-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.data-change {
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.data-change.up   { color: var(--success); }
+.data-change.down { color: var(--error); }
+</style>
+</head>
+<body>
+
+<div class="grid">
+
+  <!-- 热搜榜单 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">热搜榜单</div>
+        <div class="card-subtitle">实时热点追踪</div>
+      </div>
+      <div class="tabs" id="hotTabs">
+        <button class="tab active" data-platform="weibo">微博</button>
+        <button class="tab" data-platform="zhihu">知乎</button>
+        <button class="tab" data-platform="bilibili">B站</button>
+        <button class="tab" data-platform="douyin">抖音</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="hot-list" id="hotList"></ul>
+    </div>
+  </div>
+
+  <!-- 行业资讯 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">行业资讯</div>
+        <div class="card-subtitle" id="newsCount">-- 个订阅源</div>
+      </div>
+    </div>
+    <div class="card-body" id="newsBody">
+      <div class="skeleton skeleton-line w-full"></div>
+      <div class="skeleton skeleton-line w-3-4"></div>
+      <div class="skeleton skeleton-line w-1-2"></div>
+    </div>
+  </div>
+
+  <!-- 待办事项 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">待办事项</div>
+        <div class="card-subtitle" id="todoStats">-- 项待完成</div>
+      </div>
+    </div>
+    <div class="card-body" id="todoBody">
+      <div class="skeleton skeleton-line w-full"></div>
+      <div class="skeleton skeleton-line w-3-4"></div>
+    </div>
+  </div>
+
+  <!-- 今日日程 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">今日日程</div>
+        <div class="card-subtitle" id="scheduleDate">--</div>
+      </div>
+    </div>
+    <div class="card-body" id="scheduleBody">
+      <div class="skeleton skeleton-line w-full"></div>
+      <div class="skeleton skeleton-line w-1-2"></div>
+    </div>
+  </div>
+
+  <!-- 天气 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">天气</div>
+        <div class="card-subtitle" id="weatherCity">--</div>
+      </div>
+    </div>
+    <div class="card-body" id="weatherBody">
+      <div class="skeleton skeleton-line w-full" style="height:40px;"></div>
+      <div class="skeleton skeleton-line w-3-4"></div>
+    </div>
+  </div>
+
+  <!-- 粉丝数据 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">粉丝数据</div>
+        <div class="card-subtitle">社交媒体概览</div>
+      </div>
+    </div>
+    <div class="card-body" id="socialBody">
+      <div class="social-grid">
+        <div class="social-stat">
+          <div class="social-stat-icon material-symbols-outlined">smart_display</div>
+          <div class="social-stat-value">--</div>
+          <div class="social-stat-label">B站</div>
+        </div>
+        <div class="social-stat">
+          <div class="social-stat-icon material-symbols-outlined">play_circle</div>
+          <div class="social-stat-value">--</div>
+          <div class="social-stat-label">YouTube</div>
+        </div>
+        <div class="social-stat">
+          <div class="social-stat-icon material-symbols-outlined">tag</div>
+          <div class="social-stat-value">--</div>
+          <div class="social-stat-label">Twitter/X</div>
+        </div>
+        <div class="social-stat">
+          <div class="social-stat-icon material-symbols-outlined">photo_camera</div>
+          <div class="social-stat-value">--</div>
+          <div class="social-stat-label">Instagram</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ===== 日期（显示在天气卡片） =====
+  document.getElementById('scheduleDate').textContent = app.formatDate().split(' ')[0];
+
+  // ===== 热搜 Mock 数据 =====
+  var hotData = {
+    weibo: [
+      { rank: 1, text: '下一代人工智能模型将改变传统行业格局', heat: '52万' },
+      { rank: 2, text: '全球开发者大会达成开源协议', heat: '38万' },
+      { rank: 3, text: '新能源汽车出口量大幅增长', heat: '27万' },
+      { rank: 4, text: '国产芯片技术突破量产瓶颈', heat: '21万' },
+      { rank: 5, text: '远程办公工具月活突破新高', heat: '18万' }
+    ],
+    zhihu: [
+      { rank: 1, text: '2026年有哪些值得关注的技术趋势？', heat: '1892' },
+      { rank: 2, text: '如何评价 Claude 4 系列模型的表现？', heat: '1547' },
+      { rank: 3, text: '为什么越来越多人选择自由职业？', heat: '982' },
+      { rank: 4, text: '学习编程的最佳路径是什么？', heat: '876' },
+      { rank: 5, text: '人工智能会取代哪些工作岗位？', heat: '754' }
+    ],
+    bilibili: [
+      { rank: 1, text: '【科技】深度解析下一代AI架构', heat: '324万' },
+      { rank: 2, text: '独立开发者的一天 VLOG', heat: '186万' },
+      { rank: 3, text: '前端框架2026年终盘点', heat: '98万' },
+      { rank: 4, text: '用Rust重写我的开源项目', heat: '87万' },
+      { rank: 5, text: '程序员高效工作的一天', heat: '65万' }
+    ],
+    douyin: [
+      { rank: 1, text: 'AI绘画新玩法惊艳全网', heat: '892万' },
+      { rank: 2, text: '程序员下班后的副业收入', heat: '654万' },
+      { rank: 3, text: '这个工具让效率翻倍', heat: '432万' },
+      { rank: 4, text: '远程办公装备分享', heat: '321万' },
+      { rank: 5, text: '一个人的创业故事', heat: '218万' }
+    ]
+  };
+
+  var currentPlatform = 'weibo';
+
+  function renderHotList(platform) {
+    var list = document.getElementById('hotList');
+    var data = hotData[platform] || hotData.weibo;
+    list.innerHTML = data.map(function (item) {
+      return '<li class="hot-item">' +
+        '<span class="hot-rank ' + (item.rank <= 3 ? 'top' : 'normal') + '">' + item.rank + '</span>' +
+        '<span class="hot-text">' + item.text + '</span>' +
+        '<span class="hot-heat">' + item.heat + '</span>' +
+      '</li>';
+    }).join('');
+  }
+
+  document.getElementById('hotTabs').addEventListener('click', function (e) {
+    var tab = e.target.closest('.tab');
+    if (!tab) return;
+    this.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    currentPlatform = tab.getAttribute('data-platform');
+    renderHotList(currentPlatform);
+  });
+
+  renderHotList('weibo');
+
+  // ===== News Mock =====
+  var newsData = [
+    { tag: 'TechNews', title: 'Anthropic 发布 Claude 4：全能型大模型再进化，支持超长上下文', time: '2小时前' },
+    { tag: 'Dev', title: '前端框架 Signals 提案进入第三阶段，多家框架表示支持', time: '3小时前' },
+    { tag: 'AI', title: '研究人员开发出新型神经网络架构，训练效率提升5倍', time: '5小时前' },
+    { tag: 'Design', title: '2026年UI设计趋势：从拟物到极简的轮回', time: '6小时前' }
+  ];
+
+  document.getElementById('newsCount').textContent = '3 个订阅源';
+  document.getElementById('newsBody').innerHTML = newsData.map(function (item) {
+    return '<div class="news-item">' +
+      '<div class="news-meta"><span class="tag tag-primary">' + item.tag + '</span></div>' +
+      '<div class="news-title">' + item.title + '</div>' +
+      '<div class="news-time">' + item.time + '</div>' +
+    '</div>';
+  }).join('');
+
+  // ===== Todos Mock =====
+  var todos = [
+    { id: 1, text: 'Review PR #42 - API authentication module', done: false, deadline: null },
+    { id: 2, text: 'Prepare Q2 report draft', done: false, deadline: '6月8日' },
+    { id: 3, text: 'Update project dependencies', done: true, deadline: null },
+    { id: 4, text: 'Write unit tests for feed parser', done: true, deadline: null }
+  ];
+
+  function renderTodos() {
+    var body = document.getElementById('todoBody');
+    var pending = todos.filter(function (t) { return !t.done; }).length;
+    document.getElementById('todoStats').textContent = pending + ' 项待完成';
+    body.innerHTML = todos.map(function (item) {
+      var dl = item.deadline ? '<span class="todo-deadline">' + item.deadline + '</span>' : '';
+      return '<div class="todo-item ' + (item.done ? 'done' : '') + '">' +
+        '<div class="todo-check ' + (item.done ? 'done' : '') + '" data-id="' + item.id + '"></div>' +
+        '<span class="todo-text">' + item.text + '</span>' +
+        dl +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('todoBody').addEventListener('click', function (e) {
+    var check = e.target.closest('.todo-check');
+    if (!check) return;
+    var id = parseInt(check.getAttribute('data-id'), 10);
+    var todo = todos.find(function (t) { return t.id === id; });
+    if (todo) {
+      todo.done = !todo.done;
+      renderTodos();
+      // TODO: api.updateTodo(id, { done: todo.done })
+    }
+  });
+
+  renderTodos();
+
+  // ===== Schedule Mock =====
+  var scheduleData = [
+    { time: '09:00 - 09:30', title: '晨间站会', desc: '团队每日同步', color: '#22c55e' },
+    { time: '10:00 - 11:30', title: '产品需求评审', desc: '会议室 A / 线上同步', color: '#f97316' },
+    { time: '14:00 - 15:00', title: '技术方案讨论', desc: 'RSS 模块优化', color: '#3b82f6' },
+    { time: '16:00 - 17:00', title: 'Code Review', desc: '审查本周提交', color: '#f97316' }
+  ];
+
+  document.getElementById('scheduleBody').innerHTML = scheduleData.map(function (item) {
+    return '<div class="schedule-item">' +
+      '<div class="schedule-time">' + item.time + '</div>' +
+      '<div class="schedule-dot" style="background:' + item.color + '"></div>' +
+      '<div class="schedule-content">' +
+        '<div class="schedule-title">' + item.title + '</div>' +
+        '<div class="schedule-desc">' + item.desc + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // ===== Weather Mock =====
+  document.getElementById('weatherCity').textContent = '北京市 · 每30分钟更新';
+  document.getElementById('weatherBody').innerHTML =
+    '<div class="weather-main">' +
+      '<div class="weather-left">' +
+        '<div class="weather-temp">28°</div>' +
+        '<div class="weather-desc">多云<br/>体感 30°C</div>' +
+      '</div>' +
+      '<span class="material-symbols-outlined weather-icon">partly_cloudy_day</span>' +
+    '</div>' +
+    '<div class="weather-details">' +
+      '<div class="weather-detail"><div class="weather-detail-label">湿度</div><div class="weather-detail-value">45%</div></div>' +
+      '<div class="weather-detail"><div class="weather-detail-label">风速</div><div class="weather-detail-value">12 km/h</div></div>' +
+      '<div class="weather-detail"><div class="weather-detail-label">月相</div><div class="weather-detail-value">32%</div></div>' +
+    '</div>';
+
+  // ===== Social Mock =====
+  // 已在 HTML 中用 -- 占位，后续 API 返回后替换
+
+  // ===== Auto Refresh (30s) =====
+  var lastUpdate = Date.now();
+
+  function refreshDashboard() {
+    // TODO: 替换为真实 API 调用
+    // api.getDashboard().then(function (data) { ... })
+    lastUpdate = Date.now();
+  }
+
+  setInterval(refreshDashboard, 30000);
+
+})();
+</script>
+</body>
+</html>

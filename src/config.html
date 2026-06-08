@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FeedDeck - 配置中心</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/base.css"/>
+<style>
+/* ===== LAYOUT ===== */
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  height: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-brand h1 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--primary);
+}
+
+.sidebar-brand .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 2px;
+  transition: all 0.15s;
+}
+
+.sidebar-nav a:hover { background: var(--surface-alt); color: var(--text); }
+
+.sidebar-nav a.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.sidebar-nav a .material-symbols-outlined { font-size: 18px; color: var(--text-muted); }
+.sidebar-nav a.active .material-symbols-outlined { color: #fff; }
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-footer a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sidebar-footer a:hover { color: var(--text); }
+.sidebar-footer a .material-symbols-outlined { font-size: 18px; }
+
+/* ===== MAIN ===== */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.page-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ===== SECTIONS ===== */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ===== PANEL ===== */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+/* ===== TOGGLE ROW ===== */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.toggle-row:last-child { border-bottom: none; }
+
+.toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle-icon {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toggle-icon .material-symbols-outlined { font-size: 18px; }
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.toggle-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* ===== QUICK ADD ===== */
+.quick-add {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.quick-add .form-group { flex: 1; margin-bottom: 0; }
+
+/* ===== ABOUT ===== */
+.about-brand {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.about-version {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.about-links {
+  list-style: none;
+}
+
+.about-links li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.about-links li:last-child { border-bottom: none; }
+.about-links li .material-symbols-outlined { font-size: 18px; color: var(--text-muted); }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stat-box {
+  text-align: center;
+  padding: 12px;
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+}
+
+.stat-box-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.stat-box-value {
+  font-family: var(--font-display-en), Georgia, serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--text);
+}
+
+.stat-box-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>FeedDeck</h1>
+      <div class="sub">配置中心</div>
+    </div>
+    <nav class="sidebar-nav" id="sideNav">
+      <a data-section="basic" class="active">
+        <span class="material-symbols-outlined">settings</span>
+        基本设置
+      </a>
+      <a data-section="rss">
+        <span class="material-symbols-outlined">rss_feed</span>
+        RSS 订阅管理
+      </a>
+      <a data-section="hotsearch">
+        <span class="material-symbols-outlined">trending_up</span>
+        热搜平台
+      </a>
+      <a data-section="social">
+        <span class="material-symbols-outlined">share</span>
+        社交媒体账号
+      </a>
+      <a data-section="calendar">
+        <span class="material-symbols-outlined">event</span>
+        日历订阅
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a data-section="about">
+        <span class="material-symbols-outlined">info</span>
+        关于
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ===== 基本设置 ===== -->
+    <div class="section active" id="sec-basic">
+      <header class="page-header">
+        <div>
+          <div class="page-title">基本设置</div>
+          <div class="page-desc">管理密码、天气城市等基础配置</div>
+        </div>
+      </header>
+
+      <div class="panel">
+        <div class="panel-title">修改密码</div>
+        <div class="form-group">
+          <label class="form-label">当前密码</label>
+          <input class="form-input" type="password" placeholder="请输入当前密码" style="max-width:320px;"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">新密码</label>
+          <input class="form-input" type="password" placeholder="请输入新密码" style="max-width:320px;"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">确认新密码</label>
+          <input class="form-input" type="password" placeholder="再次输入新密码" style="max-width:320px;"/>
+        </div>
+        <button class="btn btn-primary" onclick="app.showToast('密码已更新','success')">
+          <span class="material-symbols-outlined">lock</span>
+          更新密码
+        </button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">天气设置</div>
+        <div class="form-group">
+          <label class="form-label">城市</label>
+          <input class="form-input" type="text" value="北京" placeholder="输入城市名称" style="max-width:320px;"/>
+          <div class="form-hint">使用 Open-Meteo 免费 API，无需 API Key</div>
+        </div>
+        <button class="btn btn-primary" onclick="app.showToast('设置已保存','success')">
+          <span class="material-symbols-outlined">save</span>
+          保存设置
+        </button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">刷新设置</div>
+        <div class="form-group">
+          <label class="form-label">自动刷新间隔</label>
+          <select class="form-input" style="max-width:200px;">
+            <option value="15">15 秒</option>
+            <option value="30" selected>30 秒</option>
+            <option value="60">60 秒</option>
+            <option value="120">2 分钟</option>
+            <option value="0">手动刷新</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== RSS 订阅管理 ===== -->
+    <div class="section" id="sec-rss">
+      <header class="page-header">
+        <div>
+          <div class="page-title">RSS 订阅管理</div>
+          <div class="page-desc">管理和配置您的所有信息流来源</div>
+        </div>
+        <button class="btn btn-primary" onclick="app.showToast('添加 RSS 源')">
+          <span class="material-symbols-outlined">add</span>
+          添加源
+        </button>
+      </header>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:25%;">来源名称</th>
+              <th>订阅地址 (URL)</th>
+              <th style="width:10%;">状态</th>
+              <th style="width:10%; text-align:right;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="rssBody">
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
+                  <span class="material-symbols-outlined">newspaper</span>
+                </span>
+                科技极客前沿
+              </td>
+              <td class="url-cell">https://techgeek.example.com/rss/feed.xml</td>
+              <td><span class="tag tag-success">正常</span></td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(249,115,22,0.15);color:#f97316;">
+                  <span class="material-symbols-outlined">code</span>
+                </span>
+                开发者周刊
+              </td>
+              <td class="url-cell">https://developerweekly.io/atom.xml</td>
+              <td><span class="tag tag-success">正常</span></td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(168,85,247,0.15);color:#a855f7;">
+                  <span class="material-symbols-outlined">design_services</span>
+                </span>
+                UI/UX 设计灵感
+              </td>
+              <td class="url-cell">https://designinspiration.net/feed/</td>
+              <td><span class="tag tag-muted">等待更新</span></td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quick-add" style="margin-top:16px;">
+        <div class="form-group">
+          <label class="form-label">快速添加 URL</label>
+          <input class="form-input" type="text" placeholder="https://example.com/rss.xml" id="rssUrlInput"/>
+        </div>
+        <button class="btn btn-ghost" onclick="app.showToast('验证并添加 RSS 源')">
+          <span class="material-symbols-outlined">link</span>
+          验证并添加
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== 热搜平台 ===== -->
+    <div class="section" id="sec-hotsearch">
+      <header class="page-header">
+        <div>
+          <div class="page-title">热搜平台</div>
+          <div class="page-desc">选择要追踪的热搜平台，每5分钟自动更新</div>
+        </div>
+        <button class="btn btn-primary" onclick="app.showToast('设置已保存','success')">
+          <span class="material-symbols-outlined">save</span>
+          保存设置
+        </button>
+      </header>
+
+      <div class="panel" id="hotPlatforms">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">
+              <span class="material-symbols-outlined">whatshot</span>
+            </div>
+            <div>
+              <div class="toggle-label">微博热搜</div>
+              <div class="toggle-desc">实时热门话题，Top 20</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
+              <span class="material-symbols-outlined">psychology</span>
+            </div>
+            <div>
+              <div class="toggle-label">知乎热榜</div>
+              <div class="toggle-desc">优质问答社区热门话题，Top 15</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(255,255,255,0.06);color:var(--text);">
+              <span class="material-symbols-outlined">play_circle</span>
+            </div>
+            <div>
+              <div class="toggle-label">抖音热搜</div>
+              <div class="toggle-desc">短视频平台热门内容，Top 20</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
+              <span class="material-symbols-outlined">search</span>
+            </div>
+            <div>
+              <div class="toggle-label">百度热搜</div>
+              <div class="toggle-desc">搜索引擎热点趋势，Top 15</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox"/><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">
+              <span class="material-symbols-outlined">newsmode</span>
+            </div>
+            <div>
+              <div class="toggle-label">今日头条</div>
+              <div class="toggle-desc">新闻资讯热点，Top 15</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox"/><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
+              <span class="material-symbols-outlined">live_tv</span>
+            </div>
+            <div>
+              <div class="toggle-label">B站热搜</div>
+              <div class="toggle-desc">视频创作者社区热门，Top 15</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(255,255,255,0.06);color:var(--text);">
+              <span class="material-symbols-outlined">rocket_launch</span>
+            </div>
+            <div>
+              <div class="toggle-label">GitHub Trending</div>
+              <div class="toggle-desc">开源项目热度排行，每日更新</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked/><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-icon" style="background:rgba(249,115,22,0.12);color:#f97316;">
+              <span class="material-symbols-outlined">forum</span>
+            </div>
+            <div>
+              <div class="toggle-label">Reddit</div>
+              <div class="toggle-desc">全球社区讨论热点，Top 15</div>
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox"/><span class="toggle-track"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 社交媒体账号 ===== -->
+    <div class="section" id="sec-social">
+      <header class="page-header">
+        <div>
+          <div class="page-title">社交媒体账号</div>
+          <div class="page-desc">管理社交媒体追踪账号（v2 功能，每30分钟更新）</div>
+        </div>
+        <button class="btn btn-primary" onclick="app.showToast('添加社交媒体账号')">
+          <span class="material-symbols-outlined">add</span>
+          添加账号
+        </button>
+      </header>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>平台</th>
+              <th>用户名</th>
+              <th>当前粉丝</th>
+              <th>趋势</th>
+              <th style="text-align:right;">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
+                  <span class="material-symbols-outlined">live_tv</span>
+                </span>
+                Bilibili
+              </td>
+              <td>@techcreator</td>
+              <td style="font-weight:600;">12,432</td>
+              <td><span style="color:var(--success);font-size:12px;font-weight:500;">↑ +32/日</span></td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">
+                  <span class="material-symbols-outlined">smart_display</span>
+                </span>
+                YouTube
+              </td>
+              <td>@TechCreator</td>
+              <td style="font-weight:600;">8,219</td>
+              <td><span style="color:var(--success);font-size:12px;font-weight:500;">↑ +12/日</span></td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
+                  <span class="material-symbols-outlined">tag</span>
+                </span>
+                Twitter/X
+              </td>
+              <td>@techcreator</td>
+              <td style="font-weight:600;">3,104</td>
+              <td><span style="color:var(--error);font-size:12px;font-weight:500;">↓ -5/日</span></td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-title">支持的平台</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+          <span class="tag tag-primary">Bilibili</span>
+          <span class="tag tag-primary">YouTube</span>
+          <span class="tag tag-primary">Twitter/X</span>
+          <span class="tag tag-muted">Instagram（即将支持）</span>
+          <span class="tag tag-muted">TikTok（即将支持）</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 日历订阅 ===== -->
+    <div class="section" id="sec-calendar">
+      <header class="page-header">
+        <div>
+          <div class="page-title">日历订阅</div>
+          <div class="page-desc">管理 ICS 日历订阅和日程数据源（v2 功能，每15分钟同步）</div>
+        </div>
+        <button class="btn btn-primary" onclick="app.showToast('添加日历订阅')">
+          <span class="material-symbols-outlined">add</span>
+          添加订阅
+        </button>
+      </header>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>订阅名称</th>
+              <th>ICS 地址</th>
+              <th>状态</th>
+              <th>上次同步</th>
+              <th style="text-align:right;">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(249,115,22,0.12);color:var(--primary);">
+                  <span class="material-symbols-outlined">event</span>
+                </span>
+                Google 日历
+              </td>
+              <td class="url-cell">https://calendar.google.com/calendar/ical/.../basic.ics</td>
+              <td><span class="tag tag-success">同步中</span></td>
+              <td style="font-size:12px;color:var(--text-muted);">10:35</td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="source-icon" style="background:rgba(34,197,94,0.12);color:#22c55e;">
+                  <span class="material-symbols-outlined">event</span>
+                </span>
+                团队日程
+              </td>
+              <td class="url-cell">https://outlook.office365.com/calendar/.../calendar.ics</td>
+              <td><span class="tag tag-success">同步中</span></td>
+              <td style="font-size:12px;color:var(--text-muted);">10:35</td>
+              <td style="text-align:right;">
+                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
+                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quick-add" style="margin-top:16px;">
+        <div class="form-group">
+          <label class="form-label">ICS 订阅地址</label>
+          <input class="form-input" type="text" placeholder="https://example.com/calendar.ics"/>
+        </div>
+        <button class="btn btn-ghost" onclick="app.showToast('验证并添加 ICS 订阅')">
+          <span class="material-symbols-outlined">link</span>
+          验证并添加
+        </button>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-title">手动添加日程</div>
+        <div class="form-group">
+          <label class="form-label">标题</label>
+          <input class="form-input" type="text" placeholder="会议主题" style="max-width:400px;"/>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div class="form-group">
+            <label class="form-label">日期</label>
+            <input class="form-input" type="date" style="max-width:200px;"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">开始时间</label>
+            <input class="form-input" type="time" style="max-width:160px;"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">结束时间</label>
+            <input class="form-input" type="time" style="max-width:160px;"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">备注</label>
+          <input class="form-input" type="text" placeholder="可选备注信息" style="max-width:400px;"/>
+        </div>
+        <button class="btn btn-primary" onclick="app.showToast('日程已添加','success')">
+          <span class="material-symbols-outlined">add</span>
+          添加日程
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== 关于 ===== -->
+    <div class="section" id="sec-about">
+      <header class="page-header">
+        <div>
+          <div class="page-title">关于</div>
+          <div class="page-desc">FeedDeck 项目信息</div>
+        </div>
+      </header>
+
+      <div class="panel">
+        <div class="about-brand">FeedDeck</div>
+        <div class="about-version">版本 1.0.0 · 个人信息流仪表板</div>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.6;max-width:600px;margin-bottom:16px;">
+          FeedDeck 是一个部署在 Cloudflare 上的个人信息流仪表板，运行在 iPad mini 上作为电脑副屏常亮显示。
+          支持 RSS 订阅聚合、热搜追踪、天气查询、待办管理等功能。
+        </p>
+        <ul class="about-links">
+          <li><span class="material-symbols-outlined">cloud</span>部署平台：Cloudflare Pages + D1 + KV</li>
+          <li><span class="material-symbols-outlined">code</span>技术栈：纯 HTML/CSS/JS，无框架依赖</li>
+          <li><span class="material-symbols-outlined">devices</span>目标设备：iPad mini 2/3（768×1024 Safari）</li>
+          <li><span class="material-symbols-outlined">github</span>源代码：github.com/tanzhijir-04/FeedDeck</li>
+          <li><span class="material-symbols-outlined">schedule</span>数据更新：RSS/热搜 5分钟 · 天气/社交 30分钟 · 日历 15分钟</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">系统状态</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-box-label">Functions 请求</div>
+            <div class="stat-box-value">2.4K</div>
+            <div class="stat-box-sub">/ 100K 每日</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">D1 写入</div>
+            <div class="stat-box-value">156</div>
+            <div class="stat-box-sub">/ 100K 每日</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">KV 写入</div>
+            <div class="stat-box-value">12</div>
+            <div class="stat-box-sub">/ 1K 每日</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var nav = document.getElementById('sideNav');
+  var footer = document.querySelector('.sidebar-footer');
+  var allLinks = document.querySelectorAll('[data-section]');
+
+  function switchSection(id) {
+    allLinks.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('data-section') === id);
+    });
+    document.querySelectorAll('.section').forEach(function (s) {
+      s.classList.toggle('active', s.id === 'sec-' + id);
+    });
+  }
+
+  nav.addEventListener('click', function (e) {
+    var link = e.target.closest('[data-section]');
+    if (link) switchSection(link.getAttribute('data-section'));
+  });
+
+  footer.addEventListener('click', function (e) {
+    var link = e.target.closest('[data-section]');
+    if (link) switchSection(link.getAttribute('data-section'));
+  });
+
+  // RSS 删除确认
+  document.getElementById('rssBody').addEventListener('click', function (e) {
+    var del = e.target.closest('.delete');
+    if (!del) return;
+    app.confirm('确定要删除这个 RSS 源吗？').then(function (ok) {
+      if (ok) {
+        del.closest('tr').remove();
+        app.showToast('已删除', 'success');
+      }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
