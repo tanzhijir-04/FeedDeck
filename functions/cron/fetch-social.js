@@ -66,22 +66,22 @@ async function fetchAccount(account, db) {
       const res = await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${accountId}`, {
         headers: { 'User-Agent': MOBILE_UA, 'Referer': 'https://m.bilibili.com/' }
       });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.code === 0 && json.data?.card) {
-          const card = json.data.card;
-          // follower 在 data 层，不在 card 层
-          const follower = json.data.follower ?? card.follower ?? 0;
-          const nickname = name || card.name || '';
-          await db.prepare(
-            `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
-             VALUES (?, ?, ?, ?)`
-          ).bind(platform, accountId, nickname, follower).run();
-          return 1;
-        }
+      const text = await res.text();
+      const json = JSON.parse(text);
+      if (json.code === 0 && json.data?.card) {
+        const card = json.data.card;
+        // follower 可能在 data 层或 card 层
+        const follower = json.data.follower ?? card.follower ?? 0;
+        const nickname = name || card.name || '';
+        await db.prepare(
+          `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
+           VALUES (?, ?, ?, ?)`
+        ).bind(platform, accountId, nickname, follower).run();
+        return 1;
       }
-    } catch { /* fallthrough */ }
-    return 0;
+      // 调试：返回 API 响应结构
+      return { error: 'bilibili api: code=' + json.code + ' data_keys=' + Object.keys(json.data || {}).join(',') };
+    } catch (e) { return { error: e.message }; }
   }
 
   // YouTube 和 Twitter 需要 API key，预留接口
