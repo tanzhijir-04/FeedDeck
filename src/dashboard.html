@@ -191,9 +191,10 @@
   margin-top: 1px;
 }
 
-/* ===== WEATHER — Editorial Style (Compact) ===== */
+/* ===== WEATHER — Editorial Style (Adaptive) ===== */
 .weather-editorial {
   overflow: hidden;
+  align-content: start;
 }
 
 .weather-editorial .card-body {
@@ -204,12 +205,12 @@
 .weather-editorial .wx-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 /* 头部区域 */
 .wx-header {
-  padding: 10px var(--card-pad) 6px;
+  padding: var(--card-pad);
+  padding-bottom: 10px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -218,12 +219,12 @@
 .wx-header-left {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .wx-city {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 400;
   color: var(--text);
   letter-spacing: -0.3px;
@@ -232,29 +233,29 @@
 .wx-desc-row {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 8px;
 }
 
 .wx-desc {
   font-family: var(--font-display);
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   font-weight: 400;
   color: var(--text-dim);
 }
 
 .wx-update {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
 .wx-header-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .wx-icon-main {
-  font-size: 36px;
+  font-size: 44px;
   color: var(--coral);
 }
 
@@ -265,7 +266,7 @@
 
 .wx-temp {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: 42px;
+  font-size: var(--text-3xl);
   font-weight: 300;
   color: var(--text);
   line-height: 1;
@@ -274,17 +275,17 @@
 
 .wx-degree {
   font-family: var(--font-display);
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   color: var(--text-dim);
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 /* 详情网格 */
 .wx-details {
-  padding: 0 var(--card-pad) 6px;
+  padding: 0 var(--card-pad) var(--card-pad);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 6px;
 }
 
 .wx-detail-item {
@@ -292,7 +293,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6px 4px;
+  padding: 10px 6px;
   background: var(--surface-low);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -309,12 +310,12 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .wx-detail-value {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--text);
 }
@@ -324,7 +325,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px var(--card-pad);
+  padding: 10px var(--card-pad);
   background: var(--surface);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -333,11 +334,11 @@
 .wx-sun-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .wx-sun-icon {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--coral);
 }
 
@@ -351,42 +352,43 @@
 
 .wx-sun-time {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text);
-  margin-left: 2px;
+  margin-left: 4px;
 }
 
 .wx-sun-divider {
   flex: 1;
   height: 1px;
   background: var(--border);
-  margin: 0 12px;
+  margin: 0 16px;
 }
 
 /* 辅助卡片区域 */
 .wx-secondary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 6px var(--card-pad) 8px;
+  gap: 8px;
+  padding: var(--card-pad);
+  padding-top: 8px;
 }
 
 /* 空气质量卡片 */
 .wx-aqi {
-  padding: 8px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .wx-aqi-title {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
@@ -395,7 +397,7 @@
 }
 
 .wx-aqi-title .material-symbols-outlined {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .wx-aqi-content {
@@ -406,20 +408,20 @@
 
 .wx-aqi-level {
   font-family: var(--font-display);
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   color: var(--text);
   line-height: 1;
 }
 
 .wx-aqi-desc {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .wx-aqi-bar {
-  width: 3px;
-  height: 24px;
+  width: 4px;
+  height: 32px;
   background: var(--border);
   border-radius: 2px;
   overflow: hidden;
@@ -433,13 +435,13 @@
 
 /* 生活建议卡片 */
 .wx-tip {
-  padding: 8px;
+  padding: 12px;
   border-radius: var(--radius);
   background: var(--primary);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
 }
 
 .wx-tip-title {
@@ -452,9 +454,9 @@
 
 .wx-tip-text {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: #fff;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* ===== SOCIAL ===== */
