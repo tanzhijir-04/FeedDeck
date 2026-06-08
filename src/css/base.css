@@ -173,7 +173,11 @@ a:hover { text-decoration: underline; }
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
+
+.card-body::-webkit-scrollbar { display: none; }
+.card-body { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* === BUTTONS === */
 .btn {
@@ -263,12 +267,12 @@ select.form-input {
 }
 
 /* === TABS === */
-.tabs { display: flex; gap: 6px; }
+.tabs { display: flex; gap: 4px; }
 
 .tab {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: var(--text-sm);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 11px;
   font-weight: 500;
   border: none;
   cursor: pointer;
