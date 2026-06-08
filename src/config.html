@@ -564,9 +564,9 @@
       <header class="page-header">
         <div>
           <div class="page-title">社交媒体账号</div>
-          <div class="page-desc">管理社交媒体追踪账号（v2 功能，每30分钟更新）</div>
+          <div class="page-desc">管理社交媒体追踪账号（每30分钟更新粉丝数据）</div>
         </div>
-        <button class="btn btn-primary" onclick="app.showToast('添加社交媒体账号')">
+        <button class="btn btn-primary" id="addSocialBtn">
           <span class="material-symbols-outlined">add</span>
           添加账号
         </button>
@@ -577,56 +577,15 @@
           <thead>
             <tr>
               <th>平台</th>
-              <th>用户名</th>
-              <th>当前粉丝</th>
-              <th>趋势</th>
+              <th>账号 ID</th>
+              <th>昵称</th>
               <th style="text-align:right;">操作</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="socialBody">
             <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
-                  <span class="material-symbols-outlined">live_tv</span>
-                </span>
-                Bilibili
-              </td>
-              <td>@techcreator</td>
-              <td style="font-weight:600;">12,432</td>
-              <td><span style="color:var(--success);font-size:12px;font-weight:500;">↑ +32/日</span></td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">
-                  <span class="material-symbols-outlined">smart_display</span>
-                </span>
-                YouTube
-              </td>
-              <td>@TechCreator</td>
-              <td style="font-weight:600;">8,219</td>
-              <td><span style="color:var(--success);font-size:12px;font-weight:500;">↑ +12/日</span></td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span class="source-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
-                  <span class="material-symbols-outlined">tag</span>
-                </span>
-                Twitter/X
-              </td>
-              <td>@techcreator</td>
-              <td style="font-weight:600;">3,104</td>
-              <td><span style="color:var(--error);font-size:12px;font-weight:500;">↓ -5/日</span></td>
-              <td style="text-align:right;">
-                <button class="icon-btn" title="编辑"><span class="material-symbols-outlined">edit</span></button>
-                <button class="icon-btn delete" title="删除"><span class="material-symbols-outlined">delete</span></button>
+              <td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">
+                加载中...
               </td>
             </tr>
           </tbody>
@@ -634,13 +593,34 @@
       </div>
 
       <div class="panel" style="margin-top:16px;">
+        <div class="panel-title">添加社交媒体账号</div>
+        <div class="form-group">
+          <label class="form-label">平台</label>
+          <select class="form-input" id="socialPlatform" style="max-width:200px;">
+            <option value="bilibili">Bilibili</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">账号 ID</label>
+          <input class="form-input" type="text" id="socialAccountId" placeholder="B站 UID（数字）" style="max-width:320px;"/>
+          <div class="form-hint">B站：打开个人主页，URL 中的数字就是 UID</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">昵称（可选）</label>
+          <input class="form-input" type="text" id="socialName" placeholder="显示名称" style="max-width:320px;"/>
+        </div>
+        <button class="btn btn-primary" id="saveSocialBtn">
+          <span class="material-symbols-outlined">save</span>
+          保存
+        </button>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
         <div class="panel-title">支持的平台</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
           <span class="tag tag-primary">Bilibili</span>
-          <span class="tag tag-primary">YouTube</span>
-          <span class="tag tag-primary">Twitter/X</span>
-          <span class="tag tag-muted">Instagram（即将支持）</span>
-          <span class="tag tag-muted">TikTok（即将支持）</span>
+          <span class="tag tag-muted">YouTube（即将支持）</span>
+          <span class="tag tag-muted">Twitter/X（即将支持）</span>
         </div>
       </div>
     </div>
@@ -835,6 +815,136 @@
       }
     });
   });
+
+  // ===== 社交媒体账号管理 =====
+  var socialAccounts = [];
+
+  function renderSocialAccounts() {
+    var body = document.getElementById('socialBody');
+    if (socialAccounts.length === 0) {
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">暂无账号，请添加</td></tr>';
+      return;
+    }
+
+    var platformIcons = {
+      bilibili: { icon: 'live_tv', color: '#3b82f6' }
+    };
+
+    body.innerHTML = socialAccounts.map(function (acc, index) {
+      var p = platformIcons[acc.platform] || { icon: 'person', color: '#666' };
+      return '<tr>' +
+        '<td>' +
+          '<span class="source-icon" style="background:rgba(59,130,246,0.15);color:' + p.color + ';">' +
+            '<span class="material-symbols-outlined">' + p.icon + '</span>' +
+          '</span>' +
+          'Bilibili' +
+        '</td>' +
+        '<td>' + acc.accountId + '</td>' +
+        '<td>' + (acc.name || '-') + '</td>' +
+        '<td style="text-align:right;">' +
+          '<button class="icon-btn delete" data-index="' + index + '" title="删除">' +
+            '<span class="material-symbols-outlined">delete</span>' +
+          '</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadSocialAccounts() {
+    api.getConfig().then(function (config) {
+      socialAccounts = config.social_accounts || [];
+      renderSocialAccounts();
+    }).catch(function () {
+      socialAccounts = [];
+      renderSocialAccounts();
+    });
+  }
+
+  document.getElementById('addSocialBtn').addEventListener('click', function () {
+    var platform = document.getElementById('socialPlatform').value;
+    var accountId = document.getElementById('socialAccountId').value.trim();
+    var name = document.getElementById('socialName').value.trim();
+
+    if (!accountId) {
+      app.showToast('请输入账号 ID', 'error');
+      return;
+    }
+
+    // 检查是否已存在
+    var exists = socialAccounts.some(function (acc) {
+      return acc.platform === platform && acc.accountId === accountId;
+    });
+    if (exists) {
+      app.showToast('该账号已添加', 'error');
+      return;
+    }
+
+    socialAccounts.push({ platform: platform, accountId: accountId, name: name || '' });
+
+    api.updateConfig({ social_accounts: socialAccounts }).then(function () {
+      app.showToast('添加成功', 'success');
+      document.getElementById('socialAccountId').value = '';
+      document.getElementById('socialName').value = '';
+      renderSocialAccounts();
+    }).catch(function () {
+      app.showToast('保存失败', 'error');
+      socialAccounts.pop();
+    });
+  });
+
+  document.getElementById('saveSocialBtn').addEventListener('click', function () {
+    var platform = document.getElementById('socialPlatform').value;
+    var accountId = document.getElementById('socialAccountId').value.trim();
+    var name = document.getElementById('socialName').value.trim();
+
+    if (!accountId) {
+      app.showToast('请输入账号 ID', 'error');
+      return;
+    }
+
+    // 检查是否已存在
+    var exists = socialAccounts.some(function (acc) {
+      return acc.platform === platform && acc.accountId === accountId;
+    });
+    if (exists) {
+      app.showToast('该账号已添加', 'error');
+      return;
+    }
+
+    socialAccounts.push({ platform: platform, accountId: accountId, name: name || '' });
+
+    api.updateConfig({ social_accounts: socialAccounts }).then(function () {
+      app.showToast('添加成功', 'success');
+      document.getElementById('socialAccountId').value = '';
+      document.getElementById('socialName').value = '';
+      renderSocialAccounts();
+    }).catch(function () {
+      app.showToast('保存失败', 'error');
+      socialAccounts.pop();
+    });
+  });
+
+  document.getElementById('socialBody').addEventListener('click', function (e) {
+    var del = e.target.closest('.delete');
+    if (!del) return;
+    var index = parseInt(del.getAttribute('data-index'), 10);
+
+    app.confirm('确定要删除这个账号吗？').then(function (ok) {
+      if (!ok) return;
+
+      var removed = socialAccounts.splice(index, 1)[0];
+      api.updateConfig({ social_accounts: socialAccounts }).then(function () {
+        app.showToast('已删除', 'success');
+        renderSocialAccounts();
+      }).catch(function () {
+        socialAccounts.splice(index, 0, removed);
+        app.showToast('删除失败', 'error');
+      });
+    });
+  });
+
+  // 初始化加载
+  loadSocialAccounts();
 
 })();
 </script>
