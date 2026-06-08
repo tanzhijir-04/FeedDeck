@@ -197,7 +197,11 @@ Cloudflare **Pages 没有定时器功能**，需要创建一个独立的 Worker 
 3. 输入以下命令（将 `你的密码` 替换为真实密码）：
 
 ```javascript
-crypto.subtle.digest('SHA-256', new TextEncoder().encode('你的密码feeddeck-init-salt'))
+crypto.subtle.digest('SHA-256', new TextEncoder().encode('你的密码'))
+  .then(buf => {
+    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(hash + 'feeddeck-init-salt'));
+  })
   .then(buf => console.log(Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')))
 ```
 
