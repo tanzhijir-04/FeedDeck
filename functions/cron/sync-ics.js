@@ -4,6 +4,7 @@
 export async function onRequestGet(context) {
   const { env } = context;
   const taskName = 'sync-ics';
+  var totalFetched = 0;
 
   try {
     const lastRun = await env.DB.prepare(
@@ -14,17 +15,21 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 10 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      if (elapsed < 10 * 60 * 1000) return new Response(JSON.stringify({ success: true, skipped: true, reason: '冷却期未到' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     const subsStr = await env.KV.get('config:calendar_subs');
-    if (!subsStr) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (!subsStr) return new Response(JSON.stringify({ success: true, skipped: true, reason: '未配置日历订阅' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     const subs = JSON.parse(subsStr);
-    if (!subs.length) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (!subs.length) return new Response(JSON.stringify({ success: true, skipped: true, reason: '未配置日历订阅' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     const results = await Promise.allSettled(
       subs.map(sub => syncOneIcs(sub, env.DB))
     );
+
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && typeof r.value === 'number') totalFetched += r.value;
+    });
 
     const successCount = results.filter(r => r.status === 'fulfilled').length;
     await env.DB.prepare(
@@ -39,14 +44,14 @@ export async function onRequestGet(context) {
     ).bind(taskName).run().catch(() => {});
   }
 
-  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function syncOneIcs(sub, db) {
   const res = await fetch(sub.url, {
     headers: { 'User-Agent': 'FeedDeck/1.0' }
   });
-  if (!res.ok) return;
+  if (!res.ok) return 0;
 
   const text = await res.text();
   const events = parseICS(text);
@@ -55,7 +60,7 @@ async function syncOneIcs(sub, db) {
   // 先删除该来源的旧事件
   await db.prepare('DELETE FROM calendar_events WHERE source = ?').bind(source).run();
 
-  if (events.length === 0) return;
+  if (events.length === 0) return 0;
 
   // 批量插入
   const stmts = events.map(evt =>
@@ -66,6 +71,7 @@ async function syncOneIcs(sub, db) {
   );
 
   await db.batch(stmts);
+  return stmts.length;
 }
 
 // 简易 ICS 解析器

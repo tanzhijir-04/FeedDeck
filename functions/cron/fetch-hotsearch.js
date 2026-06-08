@@ -4,6 +4,7 @@
 export async function onRequestGet(context) {
   const { env } = context;
   const taskName = 'fetch-hotsearch';
+  var totalFetched = 0;
 
   try {
     const lastRun = await env.DB.prepare(
@@ -14,14 +15,14 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 4 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      if (elapsed < 4 * 60 * 1000) return new Response(JSON.stringify({ success: true, skipped: true, reason: '冷却期未到' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     // 获取启用的平台
     const platformsStr = await env.KV.get('config:hotsearch_platforms');
-    if (!platformsStr) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (!platformsStr) return new Response(JSON.stringify({ success: true, skipped: true, reason: '未配置热搜平台' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     const platforms = JSON.parse(platformsStr);
-    if (!platforms.length) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (!platforms.length) return new Response(JSON.stringify({ success: true, skipped: true, reason: '未配置热搜平台' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     // 并行抓取所有平台
     const fetchers = {
@@ -38,9 +39,13 @@ export async function onRequestGet(context) {
     const results = await Promise.allSettled(
       platforms.map(p => {
         const fn = fetchers[p];
-        return fn ? fn(env.DB) : Promise.resolve();
+        return fn ? fn(env.DB) : Promise.resolve(0);
       })
     );
+
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && typeof r.value === 'number') totalFetched += r.value;
+    });
 
     const successCount = results.filter(r => r.status === 'fulfilled').length;
     await env.DB.prepare(
@@ -55,7 +60,7 @@ export async function onRequestGet(context) {
     ).bind(taskName).run().catch(() => {});
   }
 
-  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 // --- 各平台抓取器 ---
@@ -65,7 +70,7 @@ async function fetchWeibo(db) {
     const res = await fetch('https://weibo.com/ajax/side/hotSearch', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data?.realtime || []).slice(0, 20);
 
@@ -82,7 +87,8 @@ async function fetchWeibo(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'weibo' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 async function fetchZhihu(db) {
@@ -90,7 +96,7 @@ async function fetchZhihu(db) {
     const res = await fetch('https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=20', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data || []).slice(0, 20);
 
@@ -105,7 +111,8 @@ async function fetchZhihu(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'zhihu' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 async function fetchBilibili(db) {
@@ -113,7 +120,7 @@ async function fetchBilibili(db) {
     const res = await fetch('https://api.bilibili.com/x/web-interface/search/square?limit=20', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data?.trending?.list || []).slice(0, 20);
 
@@ -128,7 +135,8 @@ async function fetchBilibili(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'bilibili' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 async function fetchDouyin(db) {
@@ -137,7 +145,7 @@ async function fetchDouyin(db) {
     const res = await fetch('https://www.douyin.com/aweme/v1/web/hot/search/list/', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data?.word_list || []).slice(0, 20);
 
@@ -152,7 +160,8 @@ async function fetchDouyin(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'douyin' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 async function fetchBaidu(db) {
@@ -160,7 +169,7 @@ async function fetchBaidu(db) {
     const res = await fetch('https://top.baidu.com/board?tab=realtime', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const text = await res.text();
 
     // 简易提取热搜标题
@@ -182,7 +191,8 @@ async function fetchBaidu(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'baidu' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 async function fetchToutiao(db) {
@@ -190,7 +200,7 @@ async function fetchToutiao(db) {
     const res = await fetch('https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const json = await res.json();
     const list = (json.data || []).slice(0, 20);
 
@@ -205,7 +215,8 @@ async function fetchToutiao(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'toutiao' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 async function fetchGithub(db) {
@@ -213,7 +224,7 @@ async function fetchGithub(db) {
     const res = await fetch('https://api.github.com/search/repositories?q=created:>=' + getDateNDaysAgo(1) + '&sort=stars&order=desc&per_page=15', {
       headers: { 'User-Agent': 'FeedDeck/1.0', 'Accept': 'application/vnd.github.v3+json' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const json = await res.json();
 
     const stmts = (json.items || []).map((item, i) =>
@@ -227,7 +238,8 @@ async function fetchGithub(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'github' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 async function fetchReddit(db) {
@@ -235,7 +247,7 @@ async function fetchReddit(db) {
     const res = await fetch('https://www.reddit.com/r/popular/hot.json?limit=15', {
       headers: { 'User-Agent': 'FeedDeck/1.0' }
     });
-    if (!res.ok) return;
+    if (!res.ok) return 0;
     const json = await res.json();
     const posts = (json.data?.children || []).slice(0, 15);
 
@@ -250,7 +262,8 @@ async function fetchReddit(db) {
     await db.prepare(
       `DELETE FROM hotsearch_items WHERE platform = 'reddit' AND fetched_at < datetime('now', '-7 days')`
     ).run();
-  } catch {}
+    return stmts.length;
+  } catch { return 0; }
 }
 
 function getDateNDaysAgo(n) {

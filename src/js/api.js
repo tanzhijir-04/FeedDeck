@@ -149,11 +149,17 @@ var api = (function () {
           window.location.href = '/';
           return Promise.reject(new Error('未登录'));
         }
-        if (!res.ok) {
-          return Promise.reject(new Error('请求失败 (' + res.status + ')'));
-        }
-        return res.json().catch(function () { return {}; });
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok) {
+            return Promise.reject(new Error(data.error || '请求失败 (' + res.status + ')'));
+          }
+          return data;
+        });
       });
+    },
+
+    getFetchLog: function () {
+      return request('GET', '/config/fetch-log');
     }
   };
 })();

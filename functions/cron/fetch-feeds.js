@@ -4,6 +4,7 @@
 export async function onRequestGet(context) {
   const { env } = context;
   const taskName = 'fetch-feeds';
+  var totalFetched = 0;
 
   try {
     // 检查上次执行时间（防止重复）
@@ -15,19 +16,24 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 4 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      if (elapsed < 4 * 60 * 1000) return new Response(JSON.stringify({ success: true, skipped: true, reason: '冷却期未到' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     // 获取 RSS 源列表
     const feedsStr = await env.KV.get('config:rss_feeds');
-    if (!feedsStr) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (!feedsStr) return new Response(JSON.stringify({ success: true, skipped: true, reason: '未配置 RSS 源' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     const feeds = JSON.parse(feedsStr);
-    if (!feeds.length) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (!feeds.length) return new Response(JSON.stringify({ success: true, skipped: true, reason: '未配置 RSS 源' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     // 并行抓取所有源
     const results = await Promise.allSettled(
       feeds.map(feed => fetchFeed(feed, env.DB))
     );
+
+    // 累加成功抓取的数量
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && typeof r.value === 'number') totalFetched += r.value;
+    });
 
     // 记录执行状态
     const successCount = results.filter(r => r.status === 'fulfilled').length;
@@ -43,7 +49,7 @@ export async function onRequestGet(context) {
     ).bind(taskName).run().catch(() => {});
   }
 
-  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function fetchFeed(feed, db) {
@@ -65,7 +71,7 @@ async function fetchFeed(feed, db) {
     // 限制每源 20 条
     const limited = items.slice(0, 20);
 
-    if (limited.length === 0) return;
+    if (limited.length === 0) return 0;
 
     // 批量插入（使用事务）
     const stmts = limited.map(item =>
@@ -82,11 +88,11 @@ async function fetchFeed(feed, db) {
       `DELETE FROM feed_items WHERE feed_key = ? AND created_at < datetime('now', '-30 days')`
     ).bind(feed.key).run();
 
+    return limited.length;
   } catch {
     // clearTimeout already called in try block
+    return 0;
   }
-
-  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 // 简易 RSS/Atom 解析

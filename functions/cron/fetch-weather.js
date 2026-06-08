@@ -4,6 +4,7 @@
 export async function onRequestGet(context) {
   const { env } = context;
   const taskName = 'fetch-weather';
+  var totalFetched = 0;
 
   try {
     const lastRun = await env.DB.prepare(
@@ -14,11 +15,11 @@ export async function onRequestGet(context) {
     const force = url.searchParams.get('force') === '1';
     if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
-      if (elapsed < 25 * 60 * 1000) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      if (elapsed < 25 * 60 * 1000) return new Response(JSON.stringify({ success: true, skipped: true, reason: '冷却期未到' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     const city = await env.KV.get('config:weather_city');
-    if (!city) return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (!city) return new Response(JSON.stringify({ success: true, skipped: true, reason: '未配置天气城市' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
     // Open-Meteo 地理编码
     const geoRes = await fetch(
@@ -44,6 +45,7 @@ export async function onRequestGet(context) {
     await env.DB.prepare(
       'INSERT INTO weather_cache (city, data) VALUES (?, ?)'
     ).bind(city, JSON.stringify(weatherData)).run();
+    totalFetched = 1;
 
     // 清理旧缓存（保留 7 天）
     await env.DB.prepare(
@@ -62,5 +64,5 @@ export async function onRequestGet(context) {
     ).bind(taskName).run().catch(() => {});
   }
 
-  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
