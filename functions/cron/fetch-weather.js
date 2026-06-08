@@ -34,7 +34,7 @@ export async function onRequestGet(context) {
     // 获取天气数据（注意：moon_phase/moon_illumination 已被 Open-Meteo 废弃）
     const weatherRes = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-      `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code,uv_index` +
       `&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset` +
       `&timezone=auto&forecast_days=1`
     );
