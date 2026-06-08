@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="referrer" content="no-referrer"/>
 <title>FeedDeck</title>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="css/base.css"/>
@@ -1307,14 +1308,11 @@
     if (oldScript) oldScript.remove();
     if (_biliTimeout) clearTimeout(_biliTimeout);
 
-    // 定义全局回调
+    // 定义全局回调（x/relation/stat 接口：{ code: 0, data: { mid, follower } }）
     window[_biliCallbackName] = function (res) {
       try {
         if (res.code === 0 && res.data) {
           var follower = res.data.follower;
-          if (follower == null && res.data.card) {
-            follower = res.data.card.follower;
-          }
           if (follower != null && follower > 0) {
             // 上报到服务端
             fetch('/api/social/client-update', {
@@ -1333,10 +1331,10 @@
       cleanupBiliJsonp();
     };
 
-    // 创建 script 标签发起 JSONP
+    // 创建 script 标签发起 JSONP（用更轻量的 relation/stat 接口）
     var script = document.createElement('script');
     script.id = 'bili-jsonp';
-    script.src = 'https://api.bilibili.com/x/web-interface/card?mid=' + accountId + '&callback=' + _biliCallbackName;
+    script.src = 'https://api.bilibili.com/x/relation/stat?vmid=' + accountId + '&callback=' + _biliCallbackName;
     script.onerror = cleanupBiliJsonp;
     document.head.appendChild(script);
 
