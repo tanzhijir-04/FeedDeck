@@ -12,6 +12,7 @@
   --bg:          #0f1117;
   --surface:     #1a1d27;
   --surface-alt: #232733;
+  --surface-low: #1e2130;
   --border:      #2e3240;
 
   /* 文字色 */
@@ -29,9 +30,14 @@
   --warning:     #eab308;
   --warning-dim: rgba(234,179,8,0.15);
 
+  /* 天气主题色 */
+  --coral:       #e07858;
+  --coral-dim:   rgba(224,120,88,0.12);
+
   /* 布局 */
   --gap:         12px;
   --radius:      8px;
+  --radius-xl:   12px;
   --card-pad:    16px;
   --sidebar-w:   200px;
 
@@ -60,6 +66,7 @@
   --text-xl:    20px;    /* 页面标题 */
   --text-2xl:   28px;    /* 大数字（天气、粉丝数） */
   --text-3xl:   40px;    /* 超大数字（温度） */
+  --text-4xl:   64px;    /* 超大温度数字（新闻风格） */
 }
 
 /* === 亮色主题 — 跟随系统 === */
@@ -68,6 +75,7 @@
     --bg:          #f8f8f8;
     --surface:     #ffffff;
     --surface-alt: #f0f0f0;
+    --surface-low: #fafafa;
     --border:      #e2e2e2;
 
     --text:        #1a1a1a;
@@ -82,6 +90,10 @@
     --error-dim:   rgba(220,38,38,0.1);
     --warning:     #ca8a04;
     --warning-dim: rgba(202,138,4,0.1);
+
+    /* 天气主题色 */
+    --coral:       #cc785c;
+    --coral-dim:   rgba(204,120,92,0.1);
   }
 }
 

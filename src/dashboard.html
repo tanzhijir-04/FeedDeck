@@ -191,95 +191,177 @@
   margin-top: 1px;
 }
 
-/* ===== WEATHER ===== */
-.weather-container {
+/* ===== WEATHER — Editorial Style ===== */
+.weather-editorial {
+  overflow: hidden;
+}
+
+.weather-editorial .card-body {
+  padding: 0;
+}
+
+/* 主容器 */
+.weather-editorial .wx-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  justify-content: space-between;
 }
 
-.weather-main {
+/* 头部区域 */
+.wx-header {
+  padding: var(--card-pad);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  align-items: flex-start;
 }
 
-.weather-left {
+.wx-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wx-city {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.wx-desc-row {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 6px;
 }
 
-.weather-temp {
-  font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-3xl);
-  font-weight: 300;
-  color: var(--text);
-  line-height: 1;
-}
-
-.weather-desc {
-  font-size: 13px;
+.wx-desc {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
   color: var(--text-dim);
 }
 
-.weather-icon {
-  font-size: 48px;
-  color: var(--primary);
+.wx-update {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 
-.weather-details {
+.wx-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.wx-icon-main {
+  font-size: 48px;
+  color: var(--coral);
+}
+
+.wx-temp-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.wx-temp {
+  font-family: var(--font-display-en), Georgia, serif;
+  font-size: var(--text-4xl);
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.wx-degree {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+/* 详情网格 */
+.wx-details {
+  padding: 0 var(--card-pad) var(--card-pad);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.weather-detail {
-  text-align: center;
-  padding: 8px 6px;
-  background: var(--surface-alt);
-  border-radius: var(--radius);
-}
-
-.weather-detail-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-bottom: 3px;
-}
-
-.weather-detail-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.weather-sun {
+.wx-detail-item {
   display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
-  border-top: 1px solid var(--border);
-  margin-top: 10px;
-}
-
-.weather-sun-item {
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  justify-content: center;
+  padding: 12px 8px;
+  background: var(--surface-low);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: background 0.2s;
+}
+
+.wx-detail-item:active {
+  background: var(--surface-alt);
+}
+
+.wx-detail-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
-.weather-sun-item .material-symbols-outlined {
-  font-size: 16px;
-  color: var(--primary);
-}
-
-.weather-sun-time {
+.wx-detail-value {
   font-family: var(--font-display-en), Georgia, serif;
+  font-size: var(--text-lg);
   font-weight: 500;
   color: var(--text);
+}
+
+/* 日出日落 */
+.wx-sun {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px var(--card-pad);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.wx-sun-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wx-sun-icon {
+  font-size: 20px;
+  color: var(--coral);
+}
+
+.wx-sun-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.wx-sun-time {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text);
+  margin-left: 4px;
+}
+
+.wx-sun-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 16px;
 }
 
 /* ===== SOCIAL ===== */
@@ -414,13 +496,7 @@
   </div>
 
   <!-- 天气 -->
-  <div class="card" data-card="weather">
-    <div class="card-header">
-      <div>
-        <div class="card-title">天气</div>
-        <div class="card-subtitle" id="weatherCity">--</div>
-      </div>
-    </div>
+  <div class="card weather-editorial" data-card="weather">
     <div class="card-body" id="weatherBody">
       <div class="skeleton skeleton-line w-full" style="height:40px;"></div>
       <div class="skeleton skeleton-line w-3-4"></div>
@@ -840,37 +916,63 @@
     var tempMin = d.temperature_2m_min ? Math.round(d.temperature_2m_min[0]) : '--';
     var sunrise = d.sunrise && d.sunrise[0] ? d.sunrise[0].slice(11, 16) : '--';
     var sunset = d.sunset && d.sunset[0] ? d.sunset[0].slice(11, 16) : '--';
-
-    document.getElementById('weatherCity').textContent =
-      (dashboardData && dashboardData.weather_city ? dashboardData.weather_city : '未知') + ' · 每30分钟更新';
+    var city = dashboardData && dashboardData.weather_city ? dashboardData.weather_city : '未知';
 
     body.innerHTML =
-      '<div class="weather-container">' +
-        '<div class="weather-main">' +
-          '<div class="weather-left">' +
-            '<div class="weather-temp">' + temp + '°</div>' +
-            '<div class="weather-desc">' + desc + '</div>' +
+      '<div class="wx-container">' +
+        '<div class="wx-header">' +
+          '<div class="wx-header-left">' +
+            '<div class="wx-city">' + city + '</div>' +
+            '<div class="wx-desc-row">' +
+              '<span class="wx-desc">' + desc + '</span>' +
+              '<span class="wx-update">每30分钟更新</span>' +
+            '</div>' +
           '</div>' +
-          '<span class="material-symbols-outlined weather-icon">' + icon + '</span>' +
-        '</div>' +
-        '<div class="weather-details">' +
-          '<div class="weather-detail"><div class="weather-detail-label">体感</div><div class="weather-detail-value">' + feelsLike + '°</div></div>' +
-          '<div class="weather-detail"><div class="weather-detail-label">湿度</div><div class="weather-detail-value">' + humidity + '%</div></div>' +
-          '<div class="weather-detail"><div class="weather-detail-label">风速</div><div class="weather-detail-value">' + wind + ' km/h</div></div>' +
-          '<div class="weather-detail"><div class="weather-detail-label">最高</div><div class="weather-detail-value">' + tempMax + '°</div></div>' +
-          '<div class="weather-detail"><div class="weather-detail-label">最低</div><div class="weather-detail-value">' + tempMin + '°</div></div>' +
-          '<div class="weather-detail"><div class="weather-detail-label">紫外线</div><div class="weather-detail-value">' + uvIndex + '</div></div>' +
-        '</div>' +
-        '<div class="weather-sun">' +
-          '<div class="weather-sun-item">' +
-            '<span class="material-symbols-outlined">wb_twilight</span>' +
-            '<span>日出</span>' +
-            '<span class="weather-sun-time">' + sunrise + '</span>' +
+          '<div class="wx-header-right">' +
+            '<span class="material-symbols-outlined wx-icon-main">' + icon + '</span>' +
+            '<div class="wx-temp-row">' +
+              '<span class="wx-temp">' + temp + '</span>' +
+              '<span class="wx-degree">°</span>' +
+            '</div>' +
           '</div>' +
-          '<div class="weather-sun-item">' +
-            '<span class="material-symbols-outlined">nights_stay</span>' +
-            '<span>日落</span>' +
-            '<span class="weather-sun-time">' + sunset + '</span>' +
+        '</div>' +
+        '<div class="wx-details">' +
+          '<div class="wx-detail-item">' +
+            '<span class="wx-detail-label">体感</span>' +
+            '<span class="wx-detail-value">' + feelsLike + '°</span>' +
+          '</div>' +
+          '<div class="wx-detail-item">' +
+            '<span class="wx-detail-label">湿度</span>' +
+            '<span class="wx-detail-value">' + humidity + '%</span>' +
+          '</div>' +
+          '<div class="wx-detail-item">' +
+            '<span class="wx-detail-label">风速</span>' +
+            '<span class="wx-detail-value">' + wind + ' km/h</span>' +
+          '</div>' +
+          '<div class="wx-detail-item">' +
+            '<span class="wx-detail-label">最高</span>' +
+            '<span class="wx-detail-value">' + tempMax + '°</span>' +
+          '</div>' +
+          '<div class="wx-detail-item">' +
+            '<span class="wx-detail-label">最低</span>' +
+            '<span class="wx-detail-value">' + tempMin + '°</span>' +
+          '</div>' +
+          '<div class="wx-detail-item">' +
+            '<span class="wx-detail-label">紫外线</span>' +
+            '<span class="wx-detail-value">' + uvIndex + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wx-sun">' +
+          '<div class="wx-sun-item">' +
+            '<span class="material-symbols-outlined wx-sun-icon">wb_sunny</span>' +
+            '<span class="wx-sun-label">日出</span>' +
+            '<span class="wx-sun-time">' + sunrise + '</span>' +
+          '</div>' +
+          '<div class="wx-sun-divider"></div>' +
+          '<div class="wx-sun-item">' +
+            '<span class="wx-sun-label">日落</span>' +
+            '<span class="wx-sun-time">' + sunset + '</span>' +
+            '<span class="material-symbols-outlined wx-sun-icon">bedtime</span>' +
           '</div>' +
         '</div>' +
       '</div>';
