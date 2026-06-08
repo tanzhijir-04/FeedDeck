@@ -6,6 +6,7 @@
 <title>FeedDeck</title>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="css/base.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
 /* ===== GRID ===== */
 .grid {
@@ -683,6 +684,16 @@
 
   loadDashboard();
   setInterval(loadDashboard, 30000);
+
+  // ===== GSAP 动画 =====
+  // 页面加载时卡片淡入动画
+  gsap.from('.card', {
+    opacity: 0,
+    y: 20,
+    duration: 0.5,
+    stagger: 0.1,
+    ease: 'power2.out'
+  });
 
   // ===== 登出按钮 =====
   document.getElementById('logoutBtn').addEventListener('click', function () {
