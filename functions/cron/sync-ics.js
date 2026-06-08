@@ -10,7 +10,9 @@ export async function onRequestGet(context) {
       'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
     ).bind(taskName).first();
 
-    if (lastRun?.last_run_at) {
+    const url = new URL(context.request.url);
+    const force = url.searchParams.get('force') === '1';
+    if (!force && lastRun?.last_run_at) {
       const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
       if (elapsed < 10 * 60 * 1000) return;
     }

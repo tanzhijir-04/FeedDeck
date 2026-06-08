@@ -141,6 +141,19 @@ var api = (function () {
 
     deleteIcs: function (id) {
       return request('DELETE', '/config/ics/' + encodeURIComponent(id));
+    },
+
+    triggerCron: function (path) {
+      return fetch(path, { method: 'GET', credentials: 'same-origin' }).then(function (res) {
+        if (res.status === 401) {
+          window.location.href = '/';
+          return Promise.reject(new Error('未登录'));
+        }
+        if (!res.ok) {
+          return Promise.reject(new Error('请求失败 (' + res.status + ')'));
+        }
+        return res.json().catch(function () { return {}; });
+      });
     }
   };
 })();

@@ -6,6 +6,17 @@ export async function onRequestGet(context) {
   const taskName = 'cleanup';
 
   try {
+    // 检查上次执行时间（23 小时冷却期）
+    const lastRun = await env.DB.prepare(
+      'SELECT last_run_at FROM fetch_log WHERE task_name = ?'
+    ).bind(taskName).first();
+
+    const url = new URL(context.request.url);
+    const force = url.searchParams.get('force') === '1';
+    if (!force && lastRun?.last_run_at) {
+      const elapsed = Date.now() - new Date(lastRun.last_run_at).getTime();
+      if (elapsed < 23 * 60 * 60 * 1000) return; // 23 小时内不重复
+    }
     // 清理 7 天前的热搜数据
     await env.DB.prepare(
       `DELETE FROM hotsearch_items WHERE fetched_at < datetime('now', '-7 days')`

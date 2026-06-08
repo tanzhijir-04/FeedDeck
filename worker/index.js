@@ -1,7 +1,7 @@
 // FeedDeck 定时任务调度 Worker
 // 这个 Worker 负责触发 Pages Functions 中的 cron 任务
 
-const PAGES_URL = 'https://feeddeck-2dg.pages.dev';
+const PAGES_URL = globalThis.PAGES_URL || 'https://feeddeck-2dg.pages.dev';
 
 export default {
   async scheduled(event, env, ctx) {

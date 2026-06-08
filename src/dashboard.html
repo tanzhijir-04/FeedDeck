@@ -436,6 +436,10 @@
 
 </div>
 
+<button id="logoutBtn" style="position:fixed;top:8px;right:8px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px 10px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:4px;">
+  <span class="material-symbols-outlined" style="font-size:14px;">logout</span> 退出
+</button>
+
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -549,8 +553,14 @@
     }
     var colors = ['#22c55e', '#f97316', '#3b82f6', '#a855f7', '#ef4444'];
     body.innerHTML = events.map(function (item, i) {
-      var start = item.start_time ? item.start_time.slice(11, 16) : '--:--';
-      var end = item.end_time ? item.end_time.slice(11, 16) : '';
+      var start = '';
+      if (item.start_time) {
+        start = item.start_time.length > 10 ? item.start_time.slice(11, 16) : '全天';
+      }
+      var end = '';
+      if (item.end_time) {
+        end = item.end_time.length > 10 ? item.end_time.slice(11, 16) : '';
+      }
       var time = end ? start + ' - ' + end : start;
       var color = colors[i % colors.length];
       return '<div class="schedule-item">' +
@@ -585,11 +595,12 @@
 
   function renderWeather(weatherData) {
     var body = document.getElementById('weatherBody');
-    if (!weatherData || !weatherData.current) {
+    var wx = weatherData && weatherData.data;
+    if (!wx || !wx.current) {
       body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无天气数据</div>';
       return;
     }
-    var c = weatherData.current;
+    var c = wx.current;
     var code = c.weather_code || 0;
     var desc = wmoDescriptions[code] || '未知';
     var icon = wmoIcons[code] || 'cloud';
@@ -654,8 +665,9 @@
       // 待办事项
       renderTodos(data.todos && data.todos.items);
 
-      // 今日日程（只显示今天的事件）
-      var today = new Date().toISOString().slice(0, 10);
+      // 今日日程（只显示今天的事件，使用本地时间）
+      var _n = new Date();
+      var today = _n.getFullYear() + '-' + String(_n.getMonth() + 1).padStart(2, '0') + '-' + String(_n.getDate()).padStart(2, '0');
       var todayEvents = (data.calendar && data.calendar.events || []).filter(function (evt) {
         return evt.start_time && evt.start_time.slice(0, 10) === today;
       });
@@ -673,6 +685,15 @@
 
   loadDashboard();
   setInterval(loadDashboard, 30000);
+
+  // ===== 登出按钮 =====
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    api.logout().then(function () {
+      window.location.href = '/';
+    }).catch(function () {
+      window.location.href = '/';
+    });
+  });
 
 })();
 </script>

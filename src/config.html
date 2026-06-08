@@ -699,6 +699,30 @@
           </div>
         </div>
       </div>
+
+      <div class="panel">
+        <div class="panel-title">手动触发数据抓取</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+          首次部署后点击按钮初始化数据，之后 cron 自动更新
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="triggerCronTask('/cron/fetch-feeds')">
+            <span class="material-symbols-outlined">rss_feed</span> 抓取 RSS
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="triggerCronTask('/cron/fetch-hotsearch')">
+            <span class="material-symbols-outlined">trending_up</span> 抓取热搜
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="triggerCronTask('/cron/fetch-weather')">
+            <span class="material-symbols-outlined">cloud</span> 获取天气
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="triggerCronTask('/cron/fetch-social')">
+            <span class="material-symbols-outlined">share</span> 获取社交数据
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="triggerCronTask('/cron/sync-ics')">
+            <span class="material-symbols-outlined">event</span> 同步日历
+          </button>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -1081,20 +1105,43 @@
     });
   });
 
+  // ===== 手动触发 Cron =====
+  window.triggerCronTask = function (path) {
+    app.showToast('正在抓取...', 'success');
+    api.triggerCron(path + '?force=1').then(function () {
+      app.showToast('抓取完成，返回仪表盘查看', 'success');
+    }).catch(function (err) {
+      app.showToast('抓取失败: ' + (err.message || '未知错误'), 'error');
+    });
+  };
+
   // ===== 加载所有配置 =====
   function loadConfig() {
     api.getConfig().then(function (config) {
       // 天气城市
       if (config.weather_city) {
         document.getElementById('weatherCity').value = config.weather_city;
+      } else {
+        // 首次使用：将默认城市保存到 KV
+        api.updateConfig({ weather_city: '北京' });
       }
       // 热搜平台开关
-      if (config.hotsearch_platforms) {
+      if (config.hotsearch_platforms && config.hotsearch_platforms.length) {
         var platforms = config.hotsearch_platforms;
         document.querySelectorAll('#hotPlatforms input[type="checkbox"]').forEach(function (cb) {
           var p = cb.getAttribute('data-platform');
           cb.checked = platforms.indexOf(p) !== -1;
         });
+      } else {
+        // 首次使用：将 HTML 中默认勾选的平台保存到 KV
+        var defaults = [];
+        document.querySelectorAll('#hotPlatforms input[type="checkbox"]:checked').forEach(function (cb) {
+          var p = cb.getAttribute('data-platform');
+          if (p) defaults.push(p);
+        });
+        if (defaults.length) {
+          api.updateConfig({ hotsearch_platforms: defaults });
+        }
       }
       // RSS
       renderRssList(config.rss_feeds || []);
