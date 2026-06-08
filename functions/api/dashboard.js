@@ -134,11 +134,18 @@ async function getCalendar(env) {
   }
 }
 
-// 社交：每个平台取最新一条
+// 社交：每个平台取最新一条，含配置信息供客户端直连使用
 async function getSocial(env) {
   try {
+    // 读取配置（含 accountId，供前端 JSONP 使用）
+    let socialConfig = [];
+    try {
+      const configStr = await env.KV.get('config:social_accounts');
+      if (configStr) socialConfig = JSON.parse(configStr);
+    } catch { /* 忽略 */ }
+
     const rows = await env.DB.prepare(
-      `SELECT platform, account_name, follower_count
+      `SELECT platform, account_id, account_name, follower_count, fetched_at
        FROM social_stats
        WHERE fetched_at = (
          SELECT MAX(fetched_at) FROM social_stats s2
@@ -148,11 +155,28 @@ async function getSocial(env) {
     ).all();
 
     const accounts = {};
+    const now = Date.now();
     for (const row of (rows.results || [])) {
-      accounts[row.platform] = {
+      const entry = {
         account_name: row.account_name,
-        follower_count: row.follower_count
+        follower_count: row.follower_count,
+        fetched_at: row.fetched_at
       };
+
+      // KV 缓存兜底：D1 数据超过 2 小时，尝试读 KV
+      const fetchedTime = new Date(row.fetched_at).getTime();
+      if (now - fetchedTime > 2 * 60 * 60 * 1000 && row.account_id) {
+        try {
+          const cached = await env.KV.get(`cache:social:${row.account_id}`, 'json');
+          if (cached && cached.followerCount != null) {
+            entry.follower_count = cached.followerCount;
+            entry.fetched_at = cached.fetchedAt;
+            entry.from_cache = true;
+          }
+        } catch { /* 忽略 */ }
+      }
+
+      accounts[row.platform] = entry;
     }
 
     const lastRun = await env.DB.prepare(
@@ -161,9 +185,10 @@ async function getSocial(env) {
 
     return {
       accounts,
+      config: socialConfig,
       lastUpdated: lastRun?.last_run_at || null
     };
   } catch {
-    return { accounts: {}, lastUpdated: null };
+    return { accounts: {}, config: [], lastUpdated: null };
   }
 }

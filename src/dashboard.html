@@ -1278,6 +1278,79 @@
 
     renderWeather(data.weather);
     renderSocial(data.social && data.social.accounts);
+
+    // 客户端直连 B站获取粉丝数（绕过 Worker IP 被封）
+    fetchBilibiliFollowers(data.social && data.social.config);
+  }
+
+  // ===== B站 JSONP 客户端直连 =====
+  var _biliCallbackName = 'FeedDeck_biliCB_' + Date.now();
+  var _biliTimeout = null;
+
+  function fetchBilibiliFollowers(socialConfig) {
+    if (!socialConfig || !socialConfig.length) return;
+
+    // 找到 bilibili 平台的账号
+    var biliAccount = null;
+    for (var i = 0; i < socialConfig.length; i++) {
+      if (socialConfig[i].platform === 'bilibili') {
+        biliAccount = socialConfig[i];
+        break;
+      }
+    }
+    if (!biliAccount || !biliAccount.accountId) return;
+
+    var accountId = biliAccount.accountId;
+
+    // 清理上一次的 script 标签
+    var oldScript = document.getElementById('bili-jsonp');
+    if (oldScript) oldScript.remove();
+    if (_biliTimeout) clearTimeout(_biliTimeout);
+
+    // 定义全局回调
+    window[_biliCallbackName] = function (res) {
+      try {
+        if (res.code === 0 && res.data) {
+          var follower = res.data.follower;
+          if (follower == null && res.data.card) {
+            follower = res.data.card.follower;
+          }
+          if (follower != null && follower > 0) {
+            // 上报到服务端
+            fetch('/api/social/client-update', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                platform: 'bilibili',
+                accountId: accountId,
+                followerCount: follower
+              })
+            }).catch(function () {});
+          }
+        }
+      } catch (e) { /* 忽略 */ }
+      cleanupBiliJsonp();
+    };
+
+    // 创建 script 标签发起 JSONP
+    var script = document.createElement('script');
+    script.id = 'bili-jsonp';
+    script.src = 'https://api.bilibili.com/x/web-interface/card?mid=' + accountId + '&callback=' + _biliCallbackName;
+    script.onerror = cleanupBiliJsonp;
+    document.head.appendChild(script);
+
+    // 8 秒超时
+    _biliTimeout = setTimeout(function () {
+      cleanupBiliJsonp();
+    }, 8000);
+  }
+
+  function cleanupBiliJsonp() {
+    if (_biliTimeout) { clearTimeout(_biliTimeout); _biliTimeout = null; }
+    var s = document.getElementById('bili-jsonp');
+    if (s) s.remove();
+    try { delete window[_biliCallbackName]; } catch (e) { window[_biliCallbackName] = undefined; }
   }
 
   // ===== 加载 Dashboard 数据 =====
