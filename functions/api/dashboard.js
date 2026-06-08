@@ -1,4 +1,4 @@
-// GET /api/dashboard
+﻿// GET /api/dashboard
 // 聚合所有模块数据，一次返回
 
 export async function onRequestGet(context) {
@@ -6,23 +6,18 @@ export async function onRequestGet(context) {
 
   try {
     // 并行查询所有数据源
-    const [feeds, hotsearch, weather, todos, calendar, social] = await Promise.all([
+    const [feeds, hotsearch, weather, todos, calendar, social, weatherCity] = await Promise.all([
       getFeeds(env),
       getHotsearch(env),
       getWeather(env),
       getTodos(env),
       getCalendar(env),
-      getSocial(env)
-    ]);
+      getSocial(env),
+  env.KV.get('config:weather_city')
+]);
 
     return new Response(JSON.stringify({
-      feeds,
-      hotsearch,
-      weather,
-      todos,
-      calendar,
-      social
-    }), {
+      feeds, hotsearch, weather, todos, calendar, social, weather_city: weatherCity || '北京'), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
