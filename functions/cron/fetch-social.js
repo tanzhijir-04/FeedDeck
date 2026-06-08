@@ -70,7 +70,8 @@ async function fetchAccount(account, db) {
         const json = await res.json();
         if (json.code === 0 && json.data?.card) {
           const card = json.data.card;
-          const follower = card.follower || 0;
+          // follower 在 data 层，不在 card 层
+          const follower = json.data.follower ?? card.follower ?? 0;
           const nickname = name || card.name || '';
           await db.prepare(
             `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
