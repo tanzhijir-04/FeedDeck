@@ -325,37 +325,34 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px var(--card-pad);
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  padding: var(--card-pad);
+  background: var(--surface-low);
+  border-radius: var(--radius);
+  margin: 0 var(--card-pad);
 }
 
 .wx-sun-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .wx-sun-icon {
-  font-size: 18px;
+  font-size: 24px;
   color: var(--coral);
 }
 
 .wx-sun-label {
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: var(--text-xs);
+  font-weight: 500;
   color: var(--text-muted);
 }
 
 .wx-sun-time {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   font-weight: 500;
   color: var(--text);
-  margin-left: 4px;
 }
 
 .wx-sun-divider {
