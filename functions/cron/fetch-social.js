@@ -1,10 +1,13 @@
-﻿// Cron: fetch-social（每30分钟）
+// Cron: fetch-social（每30分钟）
 // 获取社交媒体粉丝数据
+
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 
 export async function onRequestGet(context) {
   const { env } = context;
   const taskName = 'fetch-social';
   var totalFetched = 0;
+  var errors = [];
 
   try {
     const lastRun = await env.DB.prepare(
@@ -27,11 +30,17 @@ export async function onRequestGet(context) {
       accounts.map(acc => fetchAccount(acc, env.DB))
     );
 
-    results.forEach(r => {
-      if (r.status === 'fulfilled' && typeof r.value === 'number') totalFetched += r.value;
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled' && typeof r.value === 'number') {
+        totalFetched += r.value;
+      } else if (r.status === 'fulfilled' && r.value?.error) {
+        errors.push(accounts[i].platform + ': ' + r.value.error);
+      } else if (r.status === 'rejected') {
+        errors.push(accounts[i].platform + ': ' + (r.reason?.message || 'unknown'));
+      }
     });
 
-    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    const successCount = results.filter(r => r.status === 'fulfilled' && (!r.value || typeof r.value === 'number')).length;
     await env.DB.prepare(
       `INSERT OR REPLACE INTO fetch_log (task_name, last_run_at, last_status)
        VALUES (?, datetime('now'), ?)`
@@ -44,29 +53,74 @@ export async function onRequestGet(context) {
     ).bind(taskName).run().catch(() => {});
   }
 
-  return new Response(JSON.stringify({ success: true, fetched: totalFetched }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  const resp = { success: true, fetched: totalFetched };
+  if (errors.length) resp.errors = errors;
+  return new Response(JSON.stringify(resp), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function fetchAccount(account, db) {
   const { platform, accountId, name } = account;
 
   if (platform === 'bilibili') {
-    const res = await fetch(`https://api.bilibili.com/x/relation/stat?vmid=${accountId}`, {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
-    if (!res.ok) return 0;
-    const json = await res.json();
-    const count = json.data?.follower;
-    if (count !== undefined) {
-      await db.prepare(
-        `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
-         VALUES (?, ?, ?, ?)`
-      ).bind(platform, accountId, name || '', count).run();
-      return 1;
+    // 主接口：relation/stat
+    try {
+      const res = await fetch(`https://api.bilibili.com/x/relation/stat?vmid=${accountId}`, {
+        headers: { 'User-Agent': UA, 'Referer': 'https://www.bilibili.com/' }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        // B站 API 可能返回 code:0 (成功) 或 code:-412 (风控) 等
+        if (json.code === 0 && json.data?.follower !== undefined) {
+          await db.prepare(
+            `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
+             VALUES (?, ?, ?, ?)`
+          ).bind(platform, accountId, name || '', json.data.follower).run();
+          return 1;
+        }
+        // API 返回了但数据异常，尝试备用接口
+        return await fetchBilibiliFallback(accountId, name, platform, db);
+      }
+      // HTTP 失败，尝试备用接口
+      return await fetchBilibiliFallback(accountId, name, platform, db);
+    } catch {
+      return await fetchBilibiliFallback(accountId, name, platform, db);
     }
   }
 
   // YouTube 和 Twitter 需要 API key，预留接口
-  // 实际部署时需要配置 YOUTUBE_API_KEY / TWITTER_BEARER_TOKEN
   return 0;
+}
+
+// B站备用接口：通过空间页面获取粉丝数
+async function fetchBilibiliFallback(accountId, name, platform, db) {
+  try {
+    const res = await fetch(`https://api.bilibili.com/x/space/acc/info?mid=${accountId}`, {
+      headers: { 'User-Agent': UA, 'Referer': 'https://www.bilibili.com/' }
+    });
+    if (!res.ok) return { error: 'fallback HTTP ' + res.status };
+    const json = await res.json();
+    if (json.code !== 0) return { error: 'bilibili code ' + json.code };
+
+    // acc/info 不直接返回粉丝数，但可以确认账号存在
+    // 再调用 relation/stat 确认
+    const statRes = await fetch(`https://api.bilibili.com/x/relation/stat?vmid=${accountId}`, {
+      headers: {
+        'User-Agent': UA,
+        'Referer': 'https://space.bilibili.com/' + accountId + '/',
+        'Origin': 'https://space.bilibili.com'
+      }
+    });
+    if (!statRes.ok) return { error: 'stat fallback HTTP ' + statRes.status };
+    const statJson = await statRes.json();
+    if (statJson.code === 0 && statJson.data?.follower !== undefined) {
+      await db.prepare(
+        `INSERT INTO social_stats (platform, account_id, account_name, follower_count)
+         VALUES (?, ?, ?, ?)`
+      ).bind(platform, accountId, name || statJson.data.name || '', statJson.data.follower).run();
+      return 1;
+    }
+    return { error: 'bilibili stat code ' + statJson.code };
+  } catch (e) {
+    return { error: e.message };
+  }
 }
