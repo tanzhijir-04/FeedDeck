@@ -390,12 +390,38 @@
   font-variant-numeric: tabular-nums;
 }
 
-.wx-sun-divider {
+/* 日出日落进度条 */
+.wx-sun-track {
   flex: 1;
-  height: 1px;
-  min-width: 24px;
+  height: 3px;
+  min-width: 40px;
   background: var(--border);
+  border-radius: 2px;
+  position: relative;
   margin: 0 var(--gap);
+}
+
+.wx-sun-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--coral);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+.wx-sun-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: var(--icon-md);
+  color: var(--coral);
+  text-shadow: 0 0 6px rgba(255, 127, 80, 0.4);
+  transition: left 1s linear;
+  pointer-events: none;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 /* 辅助卡片区域 */
@@ -1280,6 +1306,46 @@
     95: 'thunderstorm', 96: 'thunderstorm', 99: 'thunderstorm'
   };
 
+  // ===== 日出日落进度条 =====
+  var _sunRafId = 0;
+
+  function startSunProgress(sunriseISO, sunsetISO) {
+    // 取消上一次循环
+    if (_sunRafId) { cancelAnimationFrame(_sunRafId); _sunRafId = 0; }
+
+    var fillEl = document.getElementById('wxSunFill');
+    var markerEl = document.getElementById('wxSunMarker');
+    if (!fillEl || !markerEl) return;
+
+    var sunriseMs = new Date(sunriseISO).getTime();
+    var sunsetMs = new Date(sunsetISO).getTime();
+    var duration = sunsetMs - sunriseMs;
+
+    function tick() {
+      var now = Date.now();
+      var progress;
+
+      if (now < sunriseMs) {
+        progress = 0;
+      } else if (now > sunsetMs) {
+        progress = 1;
+      } else {
+        progress = (now - sunriseMs) / duration;
+      }
+
+      var pct = (progress * 100).toFixed(2) + '%';
+      fillEl.style.width = pct;
+      markerEl.style.left = pct;
+
+      // 日落后切换为月亮图标
+      markerEl.textContent = progress >= 1 ? 'bedtime' : 'wb_sunny';
+
+      _sunRafId = requestAnimationFrame(tick);
+    }
+
+    _sunRafId = requestAnimationFrame(tick);
+  }
+
   function renderWeather(weatherData) {
     var body = document.getElementById('weatherBody');
     var wx = weatherData && weatherData.data;
@@ -1304,6 +1370,8 @@
     var tempMin = d.temperature_2m_min ? Math.round(d.temperature_2m_min[0]) : '--';
     var sunrise = d.sunrise && d.sunrise[0] ? d.sunrise[0].slice(11, 16) : '--';
     var sunset = d.sunset && d.sunset[0] ? d.sunset[0].slice(11, 16) : '--';
+    var sunriseISO = d.sunrise && d.sunrise[0] ? d.sunrise[0] : null;
+    var sunsetISO = d.sunset && d.sunset[0] ? d.sunset[0] : null;
     var city = dashboardData && dashboardData.weather_city ? dashboardData.weather_city : '未知';
     var aqi = c.european_aqi;
     var aqiInfo = getAqiInfo(aqi);
@@ -1359,7 +1427,10 @@
             '<span class="wx-sun-label">日出</span>' +
             '<span class="wx-sun-time">' + sunrise + '</span>' +
           '</div>' +
-          '<div class="wx-sun-divider"></div>' +
+          '<div class="wx-sun-track">' +
+            '<div class="wx-sun-fill" id="wxSunFill"></div>' +
+            '<span class="material-symbols-outlined wx-sun-marker" id="wxSunMarker">wb_sunny</span>' +
+          '</div>' +
           '<div class="wx-sun-item">' +
             '<span class="wx-sun-label">日落</span>' +
             '<span class="wx-sun-time">' + sunset + '</span>' +
@@ -1390,6 +1461,11 @@
 
     // 所有数字滚动动效
     animateAllNumbers(body);
+
+    // 日出日落进度条动画
+    if (sunriseISO && sunsetISO) {
+      startSunProgress(sunriseISO, sunsetISO);
+    }
   }
 
   var platformConfig = {
