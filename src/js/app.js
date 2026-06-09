@@ -3,6 +3,14 @@
    时钟、工具函数、UI 组件
    ============================================ */
 
+// 远距离观看模式：从 localStorage 读取并设置 data-distance 属性
+// 由配置页后续添加 UI 开关，此处仅负责读取
+(function() {
+  if (localStorage.getItem('feeddeck_distance') === 'far') {
+    document.documentElement.setAttribute('data-distance', 'far');
+  }
+})();
+
 var app = (function () {
   'use strict';
 

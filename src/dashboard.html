@@ -34,8 +34,8 @@
 .hot-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  gap: var(--gap);
+  padding: var(--gap) var(--card-pad);
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }
@@ -47,14 +47,14 @@
 }
 
 .hot-rank {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: var(--rank-size);
+  height: var(--rank-size);
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -80,11 +80,11 @@
 
 .hot-heat {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: 18px;
+  font-size: var(--text-lg);
   color: var(--text-muted);
   flex-shrink: 0;
   white-space: nowrap;
-  margin-left: 8px;
+  margin-left: var(--gap);
 }
 
 /* ===== NEWS ===== */
@@ -103,20 +103,20 @@
 }
 
 .news-source {
-  font-size: 18px;
+  font-size: var(--text-lg);
   color: var(--text-muted);
   font-weight: 500;
 }
 
 .news-title {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 500;
   color: var(--text);
   line-height: 1.4;
 }
 
 .news-time {
-  font-size: 18px;
+  font-size: var(--text-lg);
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -125,7 +125,7 @@
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--gap);
   padding: 5px 0;
   border-bottom: 1px solid var(--border);
 }
@@ -133,7 +133,7 @@
 .todo-item:last-child { border-bottom: none; }
 
 .todo-check {
-  width: 24px; height: 24px;
+  width: var(--check-size); height: var(--check-size);
   border: 2px solid var(--text-muted);
   border-radius: 4px;
   cursor: pointer;
@@ -154,13 +154,13 @@
 .todo-check.done::after {
   content: '✓';
   color: #fff;
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 700;
 }
 
 .todo-text {
   flex: 1;
-  font-size: 20px;
+  font-size: var(--text-xl);
   color: var(--text);
 }
 
@@ -170,7 +170,7 @@
 }
 
 .todo-deadline {
-  font-size: 18px;
+  font-size: var(--text-lg);
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -180,7 +180,7 @@
 /* ===== SCHEDULE ===== */
 .schedule-item {
   display: flex;
-  gap: 8px;
+  gap: var(--gap);
   padding: 5px 0;
   border-bottom: 1px solid var(--border);
 }
@@ -198,7 +198,7 @@
 }
 
 .schedule-dot {
-  width: 7px; height: 7px;
+  width: var(--dot-size); height: var(--dot-size);
   border-radius: 50%;
   flex-shrink: 0;
   margin-top: 4px;
@@ -207,13 +207,13 @@
 .schedule-content { flex: 1; }
 
 .schedule-title {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 500;
   color: var(--text);
 }
 
 .schedule-desc {
-  font-size: 18px;
+  font-size: var(--text-lg);
   color: var(--text-muted);
   margin-top: 1px;
 }
@@ -260,7 +260,7 @@
 .wx-desc-row {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--gap);
 }
 
 .wx-desc {
@@ -278,11 +278,11 @@
 .wx-header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--gap);
 }
 
 .wx-icon-main {
-  font-size: 64px;
+  font-size: var(--icon-xl);
   color: var(--coral);
 }
 
@@ -312,7 +312,7 @@
   padding: 0 var(--card-pad) var(--card-pad);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: var(--gap);
 }
 
 .wx-detail-item {
@@ -320,7 +320,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 6px;
+  padding: var(--card-pad) 6px;
   background: var(--surface-low);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -332,7 +332,7 @@
 }
 
 .wx-detail-label {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -361,11 +361,11 @@
 .wx-sun-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--gap);
 }
 
 .wx-sun-icon {
-  font-size: 32px;
+  font-size: var(--icon-lg);
   color: var(--coral);
 }
 
@@ -386,34 +386,34 @@
   flex: 1;
   height: 1px;
   background: var(--border);
-  margin: 0 16px;
+  margin: 0 var(--card-pad);
 }
 
 /* 辅助卡片区域 */
 .wx-secondary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: var(--gap);
   padding: var(--card-pad);
-  padding-top: 8px;
+  padding-top: var(--gap);
 }
 
 /* 空气质量卡片 */
 .wx-aqi {
-  padding: 12px;
+  padding: var(--card-pad);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--gap);
 }
 
 .wx-aqi-title {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -421,7 +421,7 @@
 }
 
 .wx-aqi-title .material-symbols-outlined {
-  font-size: 24px;
+  font-size: var(--icon-md);
 }
 
 .wx-aqi-content {
@@ -459,7 +459,7 @@
 
 /* 生活建议卡片 */
 .wx-tip {
-  padding: 12px;
+  padding: var(--card-pad);
   border-radius: var(--radius);
   background: var(--primary);
   display: flex;
@@ -469,7 +469,7 @@
 }
 
 .wx-tip-title {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -487,7 +487,7 @@
 .social-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: var(--gap);
   height: 100%;
   align-content: center;
 }
@@ -503,8 +503,8 @@
 }
 
 .social-single .social-platform-icon {
-  width: 48px;
-  height: 48px;
+  width: var(--social-avatar);
+  height: var(--social-avatar);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -513,12 +513,12 @@
 }
 
 .social-single .social-platform-icon svg {
-  width: 26px;
-  height: 26px;
+  width: var(--social-avatar-svg);
+  height: var(--social-avatar-svg);
 }
 
 .social-single .social-stat-label {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.3px;
@@ -526,7 +526,7 @@
 
 .social-single .social-stat-value {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: 48px;
+  font-size: var(--text-3xl);
   font-weight: 400;
   color: var(--text);
   line-height: 1.1;
@@ -535,13 +535,13 @@
 
 .social-stat {
   text-align: center;
-  padding: 12px 8px;
+  padding: var(--card-pad) var(--gap);
   background: var(--surface-alt);
   border-radius: var(--radius);
 }
 
 .social-stat-icon {
-  font-size: 32px;
+  font-size: var(--icon-lg);
   margin-bottom: 4px;
 }
 
@@ -553,13 +553,13 @@
 }
 
 .social-stat-label {
-  font-size: 18px;
+  font-size: var(--text-lg);
   color: var(--text-muted);
   margin-top: 2px;
 }
 
 .social-stat-change {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 500;
   margin-top: 3px;
 }

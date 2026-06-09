@@ -18,7 +18,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 40px 32px;
+  padding: var(--card-pad) var(--card-pad);
   width: 100%;
   max-width: 320px;
 }
@@ -30,14 +30,14 @@ body {
 
 .login-brand h1 {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: var(--text-2xl);
   font-weight: 400;
   color: var(--primary);
   letter-spacing: -0.5px;
 }
 
 .login-brand p {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -53,7 +53,7 @@ body {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 18px;
+  font-size: var(--icon-sm);
   color: var(--text-muted);
 }
 
@@ -64,7 +64,7 @@ body {
 
 .login-error {
   display: none;
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--error);
   margin-top: -8px;
 }
@@ -74,7 +74,7 @@ body {
 .login-btn {
   width: 100%;
   height: 44px;
-  font-size: 14px;
+  font-size: var(--text-md);
 }
 </style>
 </head>

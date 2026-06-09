@@ -1,6 +1,6 @@
 /* ============================================
    FeedDeck — Base Styles
-   暗/亮主题自适应 · iPad mini · iOS 12 Safari
+   暗/亮主题自适应 · 多设备响应式 · iOS 12 Safari
    ============================================ */
 
 /* === RESET === */
@@ -34,7 +34,7 @@
   --coral:       #e07858;
   --coral-dim:   rgba(224,120,88,0.12);
 
-  /* 布局 */
+  /* 布局间距 */
   --gap:         12px;
   --radius:      8px;
   --radius-xl:   12px;
@@ -57,16 +57,32 @@
   --font-display: var(--font-display-zh), var(--font-display-en), serif;
   --font-body:    var(--font-body-zh), var(--font-body-en), sans-serif;
 
-  /* === 字号体系（iPad Mini @1m 观看距离） === */
-  --text-xs:    18px;    /* 标签、时间戳（短文本） */
-  --text-sm:    20px;    /* 次要文字、列表辅助信息 */
-  --text-base:  24px;    /* 正文短段落 */
-  --text-md:    26px;    /* 默认正文 */
-  --text-lg:    30px;    /* 卡片标题 */
-  --text-xl:    36px;    /* 页面标题 */
-  --text-2xl:   48px;    /* 大数字（粉丝数） */
-  --text-3xl:   64px;    /* 超大数字（温度） */
-  --text-4xl:   88px;    /* 超大温度数字（新闻风格） */
+  /* === 字号体系 — XL 桌面基准（近距离观看） === */
+  --text-xs:    11px;    /* 标签、时间戳（短文本） */
+  --text-sm:    12px;    /* 次要文字、列表辅助信息 */
+  --text-base:  13px;    /* 正文短段落 */
+  --text-md:    14px;    /* 默认正文 */
+  --text-lg:    18px;    /* 卡片标题 */
+  --text-xl:    22px;    /* 页面标题 */
+  --text-2xl:   28px;    /* 大数字（粉丝数） */
+  --text-3xl:   48px;    /* 超大数字（温度） */
+  --text-4xl:   64px;    /* 超大温度数字（新闻风格） */
+
+  /* === 图标大小 === */
+  --icon-sm:    18px;
+  --icon-md:    24px;
+  --icon-lg:    32px;
+  --icon-xl:    48px;
+
+  /* === 组件尺寸 === */
+  --toggle-w:          40px;
+  --toggle-h:          22px;
+  --check-size:        24px;
+  --rank-size:         32px;
+  --dot-size:          7px;
+  --social-avatar:     48px;
+  --social-avatar-svg: 26px;
+  --toggle-icon-size:  34px;
 }
 
 /* === 亮色主题 — 跟随系统 === */
@@ -95,6 +111,149 @@
     --coral:       #cc785c;
     --coral-dim:   rgba(204,120,92,0.1);
   }
+}
+
+/* ============================================
+   响应式字号断点
+   S — 手机 (< 600px)
+   M — 小平板 (600px ~ 960px) iPad Mini/标准 iPad
+   L — 大平板 (960px ~ 1200px) iPad Pro 12.9"
+   XL — 桌面 (≥ 1200px，默认基准值)
+   ============================================ */
+
+/* === S — 手机 === */
+@media (max-width: 599px) {
+  :root {
+    --text-xs:    11px;
+    --text-sm:    12px;
+    --text-base:  13px;
+    --text-md:    14px;
+    --text-lg:    18px;
+    --text-xl:    22px;
+    --text-2xl:   32px;
+    --text-3xl:   48px;
+    --text-4xl:   64px;
+
+    --icon-sm:    18px;
+    --icon-md:    22px;
+    --icon-lg:    28px;
+    --icon-xl:    44px;
+
+    --gap:        8px;
+    --card-pad:   12px;
+    --sidebar-w:  160px;
+
+    --toggle-w:          36px;
+    --toggle-h:          20px;
+    --check-size:        20px;
+    --rank-size:         28px;
+    --dot-size:          6px;
+    --social-avatar:     40px;
+    --social-avatar-svg: 22px;
+    --toggle-icon-size:  30px;
+  }
+}
+
+/* === M — 小平板 (iPad Mini / 标准 iPad) === */
+@media (min-width: 600px) and (max-width: 959px) {
+  :root {
+    --text-xs:    13px;
+    --text-sm:    14px;
+    --text-base:  16px;
+    --text-md:    18px;
+    --text-lg:    22px;
+    --text-xl:    26px;
+    --text-2xl:   36px;
+    --text-3xl:   56px;
+    --text-4xl:   72px;
+
+    --icon-sm:    20px;
+    --icon-md:    26px;
+    --icon-lg:    36px;
+    --icon-xl:    56px;
+
+    --gap:        12px;
+    --card-pad:   18px;
+    --sidebar-w:  220px;
+
+    --toggle-w:          44px;
+    --toggle-h:          24px;
+    --check-size:        26px;
+    --rank-size:         34px;
+    --dot-size:          8px;
+    --social-avatar:     52px;
+    --social-avatar-svg: 28px;
+    --toggle-icon-size:  38px;
+  }
+}
+
+/* === L — 大平板 (iPad Pro 12.9") === */
+@media (min-width: 960px) and (max-width: 1199px) {
+  :root {
+    --text-xs:    14px;
+    --text-sm:    15px;
+    --text-base:  17px;
+    --text-md:    19px;
+    --text-lg:    24px;
+    --text-xl:    28px;
+    --text-2xl:   40px;
+    --text-3xl:   60px;
+    --text-4xl:   80px;
+
+    --icon-sm:    22px;
+    --icon-md:    28px;
+    --icon-lg:    40px;
+    --icon-xl:    60px;
+
+    --gap:        14px;
+    --card-pad:   20px;
+    --sidebar-w:  240px;
+
+    --toggle-w:          46px;
+    --toggle-h:          25px;
+    --check-size:        28px;
+    --rank-size:         36px;
+    --dot-size:          8px;
+    --social-avatar:     56px;
+    --social-avatar-svg: 30px;
+    --toggle-icon-size:  40px;
+  }
+}
+
+/* ============================================
+   远距离观看模式 (data-distance="far")
+   由 app.js 从 localStorage 读取并写入 <html>
+   覆盖所有档位为 1m 观看距离的加大值
+   ============================================ */
+
+html[data-distance="far"] {
+  --text-xs:    18px;
+  --text-sm:    20px;
+  --text-base:  24px;
+  --text-md:    26px;
+  --text-lg:    30px;
+  --text-xl:    36px;
+  --text-2xl:   48px;
+  --text-3xl:   64px;
+  --text-4xl:   88px;
+
+  --icon-sm:    24px;
+  --icon-md:    32px;
+  --icon-lg:    48px;
+  --icon-xl:    72px;
+
+  --gap:        14px;
+  --card-pad:   20px;
+  --sidebar-w:  240px;
+
+  --toggle-w:          48px;
+  --toggle-h:          26px;
+  --check-size:        30px;
+  --rank-size:         40px;
+  --dot-size:          9px;
+  --social-avatar:     56px;
+  --social-avatar-svg: 32px;
+  --toggle-icon-size:  42px;
 }
 
 /* === BASE === */
@@ -219,7 +378,7 @@ a:hover { text-decoration: underline; }
 
 .btn-sm { padding: 4px 10px; font-size: var(--text-sm); }
 
-.btn .material-symbols-outlined { font-size: 24px; }
+.btn .material-symbols-outlined { font-size: var(--icon-md); }
 
 /* === FORMS === */
 .form-group { margin-bottom: 16px; }
@@ -273,7 +432,7 @@ select.form-input {
 .tab {
   padding: 8px 16px;
   border-radius: 16px;
-  font-size: 18px;
+  font-size: var(--text-base);
   font-weight: 500;
   border: none;
   cursor: pointer;
@@ -290,8 +449,8 @@ select.form-input {
 /* === TOGGLE SWITCH === */
 .toggle {
   position: relative;
-  width: 40px;
-  height: 22px;
+  width: var(--toggle-w);
+  height: var(--toggle-h);
   flex-shrink: 0;
 }
 
@@ -328,7 +487,7 @@ select.form-input {
   align-items: center;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 16px;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -409,7 +568,7 @@ select.form-input {
   flex-shrink: 0;
 }
 
-.source-icon .material-symbols-outlined { font-size: 24px; }
+.source-icon .material-symbols-outlined { font-size: var(--icon-md); }
 
 /* === LOADING / SKELETON === */
 .skeleton {
@@ -499,7 +658,7 @@ select.form-input {
 }
 
 .empty-state .material-symbols-outlined {
-  font-size: 32px;
+  font-size: var(--icon-lg);
   margin-bottom: 8px;
   opacity: 0.4;
 }
