@@ -1540,7 +1540,6 @@
       body.innerHTML =
         '<div class="social-single">' +
           '<div class="social-platform-icon" style="background:' + config.color + '15;">' + config.svg + '</div>' +
-          '<div class="social-stat-label">' + config.label + '</div>' +
           '<div class="social-stat-value"' + animateAttr + '>' + (numVal != null ? '0' : '--') + '</div>' +
         '</div>';
       animateAllNumbers(body);
@@ -1560,7 +1559,6 @@
       html += '<div class="social-stat">' +
         '<div class="social-stat-icon">' + config.svg + '</div>' +
         '<div class="social-stat-value"' + animateAttr + '>' + (numVal != null ? '0' : '--') + '</div>' +
-        '<div class="social-stat-label">' + config.label + '</div>' +
       '</div>';
     });
     html += '</div>';
