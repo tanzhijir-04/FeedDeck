@@ -2,10 +2,6 @@ name = "feeddeck"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "src"
 
-# 定时任务（每5分钟）
-[triggers]
-crons = ["*/5 * * * *"]
-
 # D1 数据库
 [[d1_databases]]
 binding = "DB"
