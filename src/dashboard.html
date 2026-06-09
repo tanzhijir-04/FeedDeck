@@ -111,14 +111,14 @@
 }
 
 .news-title {
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: 500;
   color: var(--text);
   line-height: 1.4;
 }
 
 .news-time {
-  font-size: var(--text-xs);
+  font-size: 10px;
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -736,11 +736,11 @@
     </div>
   </div>
 
-  <!-- 行业资讯 -->
+  <!-- RSS 订阅 -->
   <div class="card" data-card="news">
     <div class="card-header">
       <div>
-        <div class="card-title">行业资讯</div>
+        <div class="card-title">RSS订阅</div>
         <div class="card-subtitle" id="newsCount">-- 个订阅源</div>
       </div>
     </div>
@@ -1197,7 +1197,7 @@
     if (!items || !items.length) {
       body.innerHTML =
         '<div class="empty-guidance">' +
-          '<div class="empty-guidance-text">添加 RSS 源后，行业资讯将显示在这里</div>' +
+          '<div class="empty-guidance-text">添加 RSS 源后，订阅内容将显示在这里</div>' +
           '<a class="empty-guidance-link" href="config.html">前往配置中心添加</a>' +
         '</div>';
       return;
