@@ -385,8 +385,9 @@
 .wx-sun-divider {
   flex: 1;
   height: 1px;
+  min-width: 24px;
   background: var(--border);
-  margin: 0 var(--card-pad);
+  margin: 0 var(--gap);
 }
 
 /* 辅助卡片区域 */
@@ -587,9 +588,94 @@
 
 .data-change.up   { color: var(--success); }
 .data-change.down { color: var(--error); }
+/* ===== DATA FRESHNESS ===== */
+.freshness-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.freshness-bar-inner {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.3s ease-out;
+  border-radius: 0 2px 2px 0;
+}
+
+.freshness-bar.error .freshness-bar-inner {
+  background: var(--error);
+}
+
+.freshness-status {
+  position: fixed;
+  bottom: var(--gap);
+  right: var(--gap);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.freshness-status:hover { opacity: 1; }
+
+.freshness-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+
+.freshness-dot.stale { background: var(--warning); }
+.freshness-dot.error { background: var(--error); }
+
+/* ===== EMPTY STATE ===== */
+.empty-guidance {
+  text-align: center;
+  padding: 16px var(--card-pad);
+  color: var(--text-muted);
+}
+
+.empty-guidance-text {
+  font-size: var(--text-sm);
+  margin-bottom: 8px;
+}
+
+.empty-guidance-link {
+  font-size: var(--text-xs);
+  color: var(--primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.empty-guidance-link:hover { text-decoration: underline; }
+
+/* ===== NEWS SOURCE ===== */
+.news-source {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-right: 6px;
+}
 </style>
 </head>
 <body>
+
+<!-- 数据新鲜度进度条 -->
+<div class="freshness-bar" id="freshnessBar"><div class="freshness-bar-inner" id="freshnessBarInner"></div></div>
+
+<!-- 数据状态指示器 -->
+<div class="freshness-status" id="freshnessStatus">
+  <span class="freshness-dot" id="freshnessDot"></span>
+  <span id="freshnessText">加载中...</span>
+</div>
 
 <div class="grid">
 
@@ -600,7 +686,7 @@
         <div class="card-title">热搜榜单</div>
         <div class="card-subtitle">实时热点追踪</div>
       </div>
-      <div class="tabs" id="hotTabs"></div>
+      <div class="tabs" id="hotTabs" role="tablist" aria-label="热搜平台"></div>
     </div>
     <div class="card-body">
       <ul class="hot-list" id="hotList"></ul>
@@ -788,6 +874,39 @@
   var currentState = 'S0';
   var currentData = null;
 
+  // ===== 数据新鲜度追踪 =====
+  var lastFetchTime = null;
+  var fetchFailCount = 0;
+  var FETCH_STALE_MS = 120000; // 2分钟未更新视为过期
+
+  function updateFreshnessIndicator() {
+    var dot = document.getElementById('freshnessDot');
+    var text = document.getElementById('freshnessText');
+    var bar = document.getElementById('freshnessBar');
+    var barInner = document.getElementById('freshnessBarInner');
+    if (!dot || !text) return;
+
+    if (fetchFailCount > 0) {
+      dot.className = 'freshness-dot error';
+      text.textContent = '数据更新失败，30秒后重试';
+      bar.className = 'freshness-bar error';
+      barInner.style.width = '100%';
+    } else if (lastFetchTime) {
+      var elapsed = Date.now() - lastFetchTime;
+      if (elapsed > FETCH_STALE_MS) {
+        dot.className = 'freshness-dot stale';
+        text.textContent = '数据可能过期 (' + app.timeAgo(lastFetchTime) + ')';
+      } else {
+        dot.className = 'freshness-dot';
+        text.textContent = '更新于 ' + new Date(lastFetchTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      }
+      bar.className = 'freshness-bar';
+      // 30秒周期内已用时间的比例
+      var pct = Math.min((elapsed / 30000) * 100, 100);
+      barInner.style.width = pct + '%';
+    }
+  }
+
   // ===== 热搜平台标签映射 =====
   var hotPlatformLabels = {
     weibo: '微博', zhihu: '知乎', bilibili: 'B站', douyin: '抖音',
@@ -804,7 +923,8 @@
     if (!keys.length) { tabsEl.innerHTML = ''; return; }
     tabsEl.innerHTML = keys.map(function (p) {
       var label = hotPlatformLabels[p] || p;
-      return '<button class="tab' + (p === currentPlatform ? ' active' : '') + '" data-platform="' + p + '">' + label + '</button>';
+      var isActive = p === currentPlatform;
+      return '<button class="tab' + (isActive ? ' active' : '') + '" role="tab" aria-selected="' + isActive + '" tabindex="' + (isActive ? '0' : '-1') + '" data-platform="' + p + '">' + label + '</button>';
     }).join('');
     if (keys.indexOf(currentPlatform) === -1) currentPlatform = keys[0];
   }
@@ -1008,12 +1128,12 @@
   function renderHotList(platform) {
     var list = document.getElementById('hotList');
     if (!dashboardData || !dashboardData.hotsearch || !dashboardData.hotsearch.platforms) {
-      list.innerHTML = '<li class="hot-item"><span class="hot-text" style="color:var(--text-muted);">暂无数据</span></li>';
+      list.innerHTML = '<li class="hot-item"><span class="hot-text" style="color:var(--text-muted);">数据加载中...</span></li>';
       return;
     }
     var data = dashboardData.hotsearch.platforms[platform] || [];
     if (!data.length) {
-      list.innerHTML = '<li class="hot-item"><span class="hot-text" style="color:var(--text-muted);">暂无数据</span></li>';
+      list.innerHTML = '<li class="hot-item"><span class="hot-text" style="color:var(--text-muted);">该平台暂无热搜数据</span></li>';
       return;
     }
     list.innerHTML = data.map(function (item) {
@@ -1028,7 +1148,11 @@
   function renderNews(items) {
     var body = document.getElementById('newsBody');
     if (!items || !items.length) {
-      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无资讯</div>';
+      body.innerHTML =
+        '<div class="empty-guidance">' +
+          '<div class="empty-guidance-text">添加 RSS 源后，行业资讯将显示在这里</div>' +
+          '<a class="empty-guidance-link" href="config.html">前往配置中心添加</a>' +
+        '</div>';
       return;
     }
     document.getElementById('newsCount').textContent = items.length + ' 条资讯';
@@ -1036,9 +1160,10 @@
       var link = item.link ? '<a href="' + item.link + '" target="_blank" style="color:inherit;text-decoration:none;">' : '';
       var linkEnd = item.link ? '</a>' : '';
       var time = item.published_at ? app.timeAgo(new Date(item.published_at).getTime()) : '';
+      var source = item.source ? '<span class="news-source">' + item.source + '</span>' : '';
       return '<div class="news-item">' +
         '<div class="news-title">' + link + item.title + linkEnd + '</div>' +
-        '<div class="news-time">' + time + '</div>' +
+        '<div class="news-time">' + source + time + '</div>' +
       '</div>';
     }).join('');
   }
@@ -1051,7 +1176,11 @@
     var pending = todos.filter(function (t) { return !t.completed; }).length;
     document.getElementById('todoStats').textContent = pending + ' 项待完成';
     if (!todos.length) {
-      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无待办</div>';
+      body.innerHTML =
+        '<div class="empty-guidance">' +
+          '<div class="empty-guidance-text">暂无待办事项</div>' +
+          '<a class="empty-guidance-link" href="config.html">前往配置中心管理</a>' +
+        '</div>';
       return;
     }
     body.innerHTML = todos.map(function (item) {
@@ -1067,7 +1196,11 @@
   function renderSchedule(events) {
     var body = document.getElementById('scheduleBody');
     if (!events || !events.length) {
-      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">今日无日程</div>';
+      body.innerHTML =
+        '<div class="empty-guidance">' +
+          '<div class="empty-guidance-text">今日无日程安排</div>' +
+          '<a class="empty-guidance-link" href="config.html">添加日历订阅或手动添加</a>' +
+        '</div>';
       return;
     }
     var colors = ['#22c55e', '#f97316', '#3b82f6', '#a855f7', '#ef4444'];
@@ -1137,7 +1270,10 @@
     var body = document.getElementById('weatherBody');
     var wx = weatherData && weatherData.data;
     if (!wx || !wx.current) {
-      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无天气数据</div>';
+      body.innerHTML =
+        '<div class="empty-guidance" style="padding:32px;">' +
+          '<div class="empty-guidance-text">天气数据加载中</div>' +
+        '</div>';
       return;
     }
     var c = wx.current;
@@ -1285,7 +1421,11 @@
     var configuredPlatforms = accounts ? Object.keys(accounts) : [];
 
     if (configuredPlatforms.length === 0) {
-      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">请在配置中心添加社交媒体账号</div>';
+      body.innerHTML =
+        '<div class="empty-guidance">' +
+          '<div class="empty-guidance-text">添加社交媒体账号后，粉丝数据将显示在这里</div>' +
+          '<a class="empty-guidance-link" href="config.html">前往配置中心添加</a>' +
+        '</div>';
       return;
     }
 
@@ -1294,7 +1434,7 @@
       var key = configuredPlatforms[0];
       var config = platformConfig[key];
       if (!config) {
-        body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">不支持的平台</div>';
+        body.innerHTML = '<div class="empty-guidance"><div class="empty-guidance-text">不支持的平台</div></div>';
         return;
       }
       var data = accounts[key];
@@ -1437,6 +1577,8 @@
     try {
       var data = await api.getDashboard();
       currentData = data;
+      lastFetchTime = Date.now();
+      fetchFailCount = 0;
 
       // 更新空卡片定时器
       updateEmptyTimers(data);
@@ -1464,8 +1606,14 @@
         // 状态未变化，只更新数据
         renderAll(data);
       }
+
+      updateFreshnessIndicator();
     } catch (e) {
-      // 静默失败
+      fetchFailCount++;
+      updateFreshnessIndicator();
+      if (fetchFailCount <= 3) {
+        app.showToast('数据更新失败，30秒后重试', 'error');
+      }
     }
   }
 
@@ -1477,14 +1625,16 @@
   currentState = detectState(dashboardData || { todos: { items: [] }, calendar: { events: [] } });
   applyLayout(currentState);
 
-  // 页面加载动画
-  gsap.from('.card', {
-    autoAlpha: 0,
-    y: 20,
-    duration: 0.5,
-    stagger: 0.1,
-    ease: 'power2.out'
-  });
+  // 页面加载动画（尊重 reduced-motion 偏好）
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    gsap.from('.card', {
+      autoAlpha: 0,
+      y: 20,
+      duration: 0.5,
+      stagger: 0.1,
+      ease: 'power2.out'
+    });
+  }
 
   // ===== resize 监听 =====
   var resizeTimeout;
@@ -1509,11 +1659,38 @@
   document.getElementById('hotTabs').addEventListener('click', function (e) {
     var tab = e.target.closest('.tab');
     if (!tab) return;
-    this.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+    this.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+      t.setAttribute('tabindex', '-1');
+    });
     tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+    tab.setAttribute('tabindex', '0');
+    tab.focus();
     currentPlatform = tab.getAttribute('data-platform');
     renderHotList(currentPlatform);
   });
+
+  // 键盘导航：左右方向键切换热搜平台标签
+  document.getElementById('hotTabs').addEventListener('keydown', function (e) {
+    var tabs = Array.from(this.querySelectorAll('.tab'));
+    var current = tabs.findIndex(function (t) { return t.getAttribute('aria-selected') === 'true'; });
+    if (current === -1) return;
+    var next = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      next = (current + 1) % tabs.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      next = (current - 1 + tabs.length) % tabs.length;
+    }
+    if (next !== -1) {
+      e.preventDefault();
+      tabs[next].click();
+    }
+  });
+
+  // 数据新鲜度定时更新
+  setInterval(updateFreshnessIndicator, 10000);
 
   document.getElementById('todoBody').addEventListener('click', function (e) {
     var check = e.target.closest('.todo-check');
