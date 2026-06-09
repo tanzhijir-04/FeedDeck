@@ -34,8 +34,8 @@
 .hot-item {
   display: flex;
   align-items: center;
-  gap: var(--gap);
-  padding: var(--gap) var(--card-pad);
+  gap: 8px;
+  padding: 6px var(--card-pad);
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }
@@ -47,14 +47,14 @@
 }
 
 .hot-rank {
-  width: var(--rank-size);
-  height: var(--rank-size);
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: 600;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
@@ -71,7 +71,7 @@
 
 .hot-text {
   display: block;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -81,11 +81,11 @@
 
 .hot-heat {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-lg);
+  font-size: var(--text-xs);
   color: var(--text-muted);
   flex-shrink: 0;
   white-space: nowrap;
-  margin-left: var(--gap);
+  margin-left: auto;
   font-variant-numeric: tabular-nums;
 }
 
@@ -229,6 +229,8 @@
 
 .weather-editorial .card-body {
   padding: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* 主容器 */
@@ -239,8 +241,8 @@
 
 /* 头部区域 */
 .wx-header {
-  padding: var(--card-pad);
-  padding-bottom: 10px;
+  padding: 8px var(--card-pad);
+  padding-bottom: 4px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -254,7 +256,7 @@
 
 .wx-city {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 400;
   color: var(--text);
   letter-spacing: -0.3px;
@@ -268,7 +270,7 @@
 
 .wx-desc {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: 400;
   color: var(--text-dim);
 }
@@ -285,7 +287,7 @@
 }
 
 .wx-icon-main {
-  font-size: var(--icon-xl);
+  font-size: var(--icon-lg);
   color: var(--coral);
 }
 
@@ -296,7 +298,7 @@
 
 .wx-temp {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: 400;
   color: var(--text);
   line-height: 1;
@@ -306,17 +308,17 @@
 
 .wx-degree {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   color: var(--text-dim);
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 /* 详情网格 */
 .wx-details {
-  padding: 0 var(--card-pad) var(--card-pad);
+  padding: 0 var(--card-pad) 6px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--gap);
+  gap: 6px;
 }
 
 .wx-detail-item {
@@ -324,7 +326,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--card-pad) 6px;
+  padding: 6px 4px;
   background: var(--surface-low);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -336,17 +338,17 @@
 }
 
 .wx-detail-label {
-  font-size: var(--text-base);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  margin-bottom: 3px;
+  margin-bottom: 1px;
 }
 
 .wx-detail-value {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -357,7 +359,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--card-pad);
+  padding: 6px var(--card-pad);
   background: var(--surface-low);
   border-radius: var(--radius);
   margin: 0 var(--card-pad);
@@ -366,11 +368,11 @@
 .wx-sun-item {
   display: flex;
   align-items: center;
-  gap: var(--gap);
+  gap: 6px;
 }
 
 .wx-sun-icon {
-  font-size: var(--icon-lg);
+  font-size: var(--icon-md);
   color: var(--coral);
 }
 
@@ -382,7 +384,7 @@
 
 .wx-sun-time {
   font-family: var(--font-display-en), Georgia, serif;
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -400,27 +402,26 @@
 .wx-secondary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--gap);
-  padding: var(--card-pad);
-  padding-top: var(--gap);
+  gap: 6px;
+  padding: 6px var(--card-pad) var(--card-pad);
 }
 
 /* 空气质量卡片 */
 .wx-aqi {
-  padding: var(--card-pad);
+  padding: 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
+  gap: 4px;
 }
 
 .wx-aqi-title {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: var(--text-base);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -428,7 +429,7 @@
 }
 
 .wx-aqi-title .material-symbols-outlined {
-  font-size: var(--icon-md);
+  font-size: var(--icon-sm);
 }
 
 .wx-aqi-content {
@@ -439,7 +440,7 @@
 
 .wx-aqi-level {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   color: var(--text);
   line-height: 1;
 }
@@ -452,7 +453,7 @@
 
 .wx-aqi-bar {
   width: 4px;
-  height: 32px;
+  height: 24px;
   background: var(--border);
   border-radius: 2px;
   overflow: hidden;
@@ -466,17 +467,17 @@
 
 /* 生活建议卡片 */
 .wx-tip {
-  padding: var(--card-pad);
+  padding: 8px;
   border-radius: var(--radius);
   background: var(--primary);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .wx-tip-title {
-  font-size: var(--text-base);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -485,9 +486,9 @@
 
 .wx-tip-text {
   font-family: var(--font-display);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: #fff;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 /* ===== SOCIAL ===== */
@@ -926,9 +927,13 @@
     douban: '豆瓣', steam: 'Steam', sspai: '少数派'
   };
 
-  function renderHotTabs(platforms) {
+  function renderHotTabs(platforms, enabledPlatforms) {
     var tabsEl = document.getElementById('hotTabs');
     var keys = Object.keys(platforms);
+    // 如果有启用平台配置，仅显示启用的平台
+    if (enabledPlatforms && enabledPlatforms.length > 0) {
+      keys = keys.filter(function (p) { return enabledPlatforms.indexOf(p) !== -1; });
+    }
     if (!keys.length) { tabsEl.innerHTML = ''; return; }
     tabsEl.innerHTML = keys.map(function (p) {
       var label = hotPlatformLabels[p] || p;
@@ -1483,7 +1488,7 @@
   function renderAll(data) {
     dashboardData = data;
 
-    renderHotTabs(data.hotsearch && data.hotsearch.platforms || {});
+    renderHotTabs(data.hotsearch && data.hotsearch.platforms || {}, data.hotsearch && data.hotsearch.enabledPlatforms);
     renderHotList(currentPlatform);
     renderNews(data.feeds && data.feeds.items);
     renderTodos(data.todos && data.todos.items);

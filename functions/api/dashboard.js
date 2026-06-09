@@ -53,19 +53,44 @@ async function getFeeds(env) {
   }
 }
 
-// 热搜：按平台分组，每平台取 5 条
+// 热搜：按平台分组，仅返回已启用的平台
 async function getHotsearch(env) {
   try {
-    const rows = await env.DB.prepare(
-      `SELECT platform, rank, title, url, heat
-       FROM hotsearch_items
-       WHERE fetched_at = (
-         SELECT MAX(fetched_at) FROM hotsearch_items h2
-         WHERE h2.platform = hotsearch_items.platform
-       )
-       ORDER BY platform, rank
-       LIMIT 150`
-    ).all();
+    // 读取用户配置的启用平台列表
+    let enabledPlatforms = null;
+    try {
+      const configStr = await env.KV.get('config:hotsearch_platforms');
+      if (configStr) enabledPlatforms = JSON.parse(configStr);
+    } catch { /* 忽略 */ }
+
+    let rows;
+    if (enabledPlatforms && enabledPlatforms.length > 0) {
+      // 仅查询启用的平台
+      const placeholders = enabledPlatforms.map(() => '?').join(',');
+      rows = await env.DB.prepare(
+        `SELECT platform, rank, title, url, heat
+         FROM hotsearch_items
+         WHERE platform IN (${placeholders})
+           AND fetched_at = (
+             SELECT MAX(fetched_at) FROM hotsearch_items h2
+             WHERE h2.platform = hotsearch_items.platform
+           )
+         ORDER BY platform, rank
+         LIMIT 150`
+      ).bind(...enabledPlatforms).all();
+    } else {
+      // 无配置时返回所有平台
+      rows = await env.DB.prepare(
+        `SELECT platform, rank, title, url, heat
+         FROM hotsearch_items
+         WHERE fetched_at = (
+           SELECT MAX(fetched_at) FROM hotsearch_items h2
+           WHERE h2.platform = hotsearch_items.platform
+         )
+         ORDER BY platform, rank
+         LIMIT 150`
+      ).all();
+    }
 
     const platforms = {};
     for (const row of (rows.results || [])) {
@@ -79,10 +104,11 @@ async function getHotsearch(env) {
 
     return {
       platforms,
+      enabledPlatforms: enabledPlatforms || [],
       lastUpdated: lastRun?.last_run_at || null
     };
   } catch {
-    return { platforms: {}, lastUpdated: null };
+    return { platforms: {}, enabledPlatforms: [], lastUpdated: null };
   }
 }
 
