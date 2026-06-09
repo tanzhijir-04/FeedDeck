@@ -33,6 +33,16 @@ export async function onRequestGet(context) {
 // RSS 聚合：每个 feed 最多取 5 条，按时间倒序
 async function getFeeds(env) {
   try {
+    // 读取 RSS 源配置，建立 feed_key → name 映射
+    let feedNameMap = {};
+    try {
+      const feedsStr = await env.KV.get('config:rss_feeds');
+      if (feedsStr) {
+        const feeds = JSON.parse(feedsStr);
+        feeds.forEach(f => { feedNameMap[f.key] = f.name; });
+      }
+    } catch { /* 忽略 */ }
+
     const rows = await env.DB.prepare(
       `SELECT feed_key, title, link, summary, published_at
        FROM feed_items
@@ -44,8 +54,14 @@ async function getFeeds(env) {
       `SELECT last_run_at FROM fetch_log WHERE task_name = 'fetch-feeds'`
     ).first();
 
+    // 给每条 item 附加 source 名称
+    const items = (rows.results || []).map(item => ({
+      ...item,
+      source: feedNameMap[item.feed_key] || item.feed_key
+    }));
+
     return {
-      items: rows.results || [],
+      items,
       lastUpdated: lastRun?.last_run_at || null
     };
   } catch {
