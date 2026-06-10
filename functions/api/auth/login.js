@@ -36,16 +36,20 @@ export async function onRequestPost(context) {
     crypto.getRandomValues(tokenBytes);
     const token = bufToHex(tokenBytes);
 
-    // 过期时间：30 天后
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    // 过期时间：10 年后（尽可能长，兼容所有浏览器）
+    const maxAge = 10 * 365 * 24 * 60 * 60; // 10 年（秒）
+    const expiresAt = new Date(Date.now() + maxAge * 1000).toISOString();
 
     // 写入 D1
     await env.DB.prepare(
       'INSERT INTO sessions (token, expires_at) VALUES (?, ?)'
     ).bind(token, expiresAt).run();
 
-    // 设置 HttpOnly cookie（同时使用 Expires 和 Max-Age，兼容 iOS Safari）
-    const maxAge = 30 * 24 * 60 * 60;
+    // 设置 HttpOnly cookie
+    // 同时使用 Expires 和 Max-Age，覆盖所有浏览器：
+    //   Chrome/Edge/Firefox：两者都支持
+    //   iOS Safari：只认 Expires，忽略 Max-Age
+    //   旧版 Android WebView：只认 Max-Age
     const expires = new Date(Date.now() + maxAge * 1000).toUTCString();
     const cookie = `fd_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}; Expires=${expires}`;
 
