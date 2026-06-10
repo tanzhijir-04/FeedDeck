@@ -44,8 +44,10 @@ export async function onRequestPost(context) {
       'INSERT INTO sessions (token, expires_at) VALUES (?, ?)'
     ).bind(token, expiresAt).run();
 
-    // 设置 HttpOnly cookie（开发环境可去掉 Secure）
-    const cookie = `fd_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${30 * 24 * 60 * 60}`;
+    // 设置 HttpOnly cookie（同时使用 Expires 和 Max-Age，兼容 iOS Safari）
+    const maxAge = 30 * 24 * 60 * 60;
+    const expires = new Date(Date.now() + maxAge * 1000).toUTCString();
+    const cookie = `fd_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}; Expires=${expires}`;
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

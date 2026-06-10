@@ -57,7 +57,9 @@ export async function onRequestPut(context) {
     ).bind(token, expiresAt).run();
 
     const isSecure = new URL(request.url).protocol === 'https:';
-    const cookie = `fd_session=${token}; Path=/; HttpOnly${isSecure ? '; Secure' : ''}; SameSite=Strict; Max-Age=${30 * 24 * 60 * 60}`;
+    const maxAge = 30 * 24 * 60 * 60;
+    const expires = new Date(Date.now() + maxAge * 1000).toUTCString();
+    const cookie = `fd_session=${token}; Path=/; HttpOnly${isSecure ? '; Secure' : ''}; SameSite=Strict; Max-Age=${maxAge}; Expires=${expires}`;
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
