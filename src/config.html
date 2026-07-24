@@ -730,7 +730,13 @@
     }
 
     api.updateConfig({ weather_city: city }).then(function () {
-      app.showToast('天气设置已保存', 'success');
+      app.showToast('天气设置已保存，正在获取天气...', 'success');
+      // 立即触发天气抓取，确保 dashboard 显示新城市的天气
+      api.triggerCron('/cron/fetch-weather?force=1').then(function () {
+        app.showToast('天气数据已更新', 'success');
+      }).catch(function () {
+        app.showToast('天气城市已保存，数据将在定时任务下次运行时更新', 'success');
+      });
     }).catch(function () {
       app.showToast('保存失败', 'error');
     });
