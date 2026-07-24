@@ -73,20 +73,25 @@ async function fetchFeed(feed, db) {
 
     if (limited.length === 0) return 0;
 
-    // 批量插入（使用事务）
-    const stmts = limited.map(item =>
-      db.prepare(
-        `INSERT INTO feed_items (feed_key, title, link, summary, published_at)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind(feed.key, item.title, item.link, item.summary, item.publishedAt)
+    // 先删旧数据，再批量插入新数据（同一 batch 事务，防止重复）
+    const stmts = [];
+
+    // 删除该源所有旧数据
+    stmts.push(
+      db.prepare('DELETE FROM feed_items WHERE feed_key = ?').bind(feed.key)
     );
 
-    await db.batch(stmts);
+    // 插入新数据
+    limited.forEach(item => {
+      stmts.push(
+        db.prepare(
+          `INSERT INTO feed_items (feed_key, title, link, summary, published_at)
+           VALUES (?, ?, ?, ?, ?)`
+        ).bind(feed.key, item.title, item.link, item.summary, item.publishedAt)
+      );
+    });
 
-    // 清理旧数据（保留 30 天）
-    await db.prepare(
-      `DELETE FROM feed_items WHERE feed_key = ? AND created_at < datetime('now', '-30 days')`
-    ).bind(feed.key).run();
+    await db.batch(stmts);
 
     return limited.length;
   } catch {
